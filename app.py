@@ -62,9 +62,9 @@ OUTPUT FORMAT — Start your response with the EXACT text ===TAB1=== on its own 
 
 ===TAB1===
 Exactly 3 paragraphs separated by <br><br>
-- Para 1 starts with: {icon('cactus')}
-- Para 2 starts with: {icon('house')}
-- Para 3 starts with: {icon('house')}
+- Para 1 (identity: name, scientific name, origin) starts with: {icon('cactus')}
+- Para 2 (appearance: shape, color, texture, size, pot style) starts with: {icon('soil')}
+- Para 3 (benefits, uses, pet/child safety, where to place) starts with: {icon('house')}
 
 ===TAB2===
 5 paragraphs separated by <br><br>, each starting with its icon:
