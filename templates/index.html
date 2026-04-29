@@ -268,6 +268,96 @@
     }
 
     .hidden { display: none !important; }
+
+    /* ── Pricing Calculator ── */
+    .calc-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .calc-header {
+      background: #f0f8f0;
+      padding: 14px 20px;
+      border-bottom: 1px solid #dde8dd;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2d5a27;
+    }
+    .calc-body { padding: 20px; }
+    .calc-inputs {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    @media (max-width: 600px) { .calc-inputs { grid-template-columns: 1fr 1fr; } }
+    .calc-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .calc-field input, .calc-field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 2px solid #dde8dd;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .calc-field input:focus, .calc-field select:focus { border-color: #3d7a35; }
+    .calc-table-wrap { margin-top: 20px; overflow-x: auto; }
+    .calc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .calc-table th {
+      background: #f0f8f0;
+      color: #2d5a27;
+      font-weight: 700;
+      padding: 9px 14px;
+      text-align: left;
+      border-bottom: 2px solid #dde8dd;
+      white-space: nowrap;
+    }
+    .calc-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+    .calc-table tr:last-child td { border-bottom: none; }
+    .calc-table tr:hover td { background: #fafffe; }
+    .sku-cell {
+      font-family: "Menlo","Consolas",monospace;
+      font-size: 0.82rem;
+      color: #333;
+    }
+    .price-cell { font-weight: 600; color: #1a1a1a; }
+    .btn-copy-sm {
+      padding: 4px 10px;
+      border: 1px solid #3d7a35;
+      color: #3d7a35;
+      background: white;
+      border-radius: 5px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background .15s;
+      white-space: nowrap;
+    }
+    .btn-copy-sm:hover { background: #f0f8f0; }
+    .btn-copy-sm.copied { background: #3d7a35; color: white; border-color: #3d7a35; }
+    .calc-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
@@ -285,6 +375,50 @@
            placeholder="e.g. Golden Pothos, Monstera Deliciosa, Aloe Vera, Bird of Paradise…" />
     <button id="generateBtn" class="btn-primary" onclick="generate()">Generate</button>
   </div>
+
+  <!-- ══ Pricing Calculator ══ -->
+  <div class="calc-card">
+    <div class="calc-header">💰 Variant SKU &amp; Price Calculator</div>
+    <div class="calc-body">
+
+      <div class="calc-inputs">
+        <div class="calc-field">
+          <label>Product Size</label>
+          <select id="calcSize" onchange="calcUpdate()">
+            <option value="2">2 inch</option>
+            <option value="4">4 inch</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>Product SKU</label>
+          <input id="calcSKU" type="text" placeholder="e.g. S2JN1158" oninput="calcUpdate()" />
+        </div>
+        <div class="calc-field">
+          <label>Item Price ($)</label>
+          <input id="calcPrice" type="number" step="0.01" min="0" placeholder="e.g. 8.05" oninput="calcUpdate()" />
+        </div>
+      </div>
+
+      <div id="calcResults" class="calc-table-wrap hidden">
+        <table class="calc-table">
+          <thead>
+            <tr>
+              <th>Variant</th>
+              <th>SKU</th>
+              <th>Price</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="calcTableBody"></tbody>
+        </table>
+        <div class="calc-actions">
+          <button class="btn-primary" style="font-size:.85rem;padding:8px 18px" onclick="copyAllVariants()">Copy All (TSV)</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- ══ End Pricing Calculator ══ -->
 
   <!-- Generating state -->
   <div id="genCard" class="gen-card hidden">
@@ -515,6 +649,80 @@
 
   function show(id) { document.getElementById(id).classList.remove("hidden"); }
   function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  /* ══ Pricing Calculator ══ */
+  const VARIANTS = {
+    "2": [
+      { name: "Plastic Pot",    skuSuffix: "",                  priceAdd: 0     },
+      { name: "Clay Pot",       skuSuffix: "+EEZZ2739",         priceAdd: 5.40  },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7680",       priceAdd: 5.95  },
+      { name: "Bamboo Pot",     skuSuffix: "+EEZZ7620.BR-1",    priceAdd: 3.00  },
+    ],
+    "4": [
+      { name: "Plastic Pot",    skuSuffix: "",                  priceAdd: 0     },
+      { name: "Clay Pot",       skuSuffix: "+EEZZ2742-1",       priceAdd: 5.40  },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",       priceAdd: 7.95  },
+      { name: "Custom Pot",     skuSuffix: "+CUSTOMPOT",        priceAdd: 13.95 },
+      { name: "Bamboo Pot",     skuSuffix: "+EEZZ7621.BR-1",    priceAdd: 3.00  },
+    ],
+  };
+
+  function fmtPrice(n) {
+    // Format to 2 decimals, drop trailing .00 only if it's a whole dollar
+    const s = n.toFixed(2);
+    return "$" + (s.endsWith(".00") ? s.slice(0, -3) : s);
+  }
+
+  function calcUpdate() {
+    const size  = document.getElementById("calcSize").value;
+    const sku   = document.getElementById("calcSKU").value.trim();
+    const price = parseFloat(document.getElementById("calcPrice").value);
+
+    if (!sku || isNaN(price) || price < 0) {
+      hide("calcResults"); return;
+    }
+
+    const variants = VARIANTS[size];
+    const tbody = document.getElementById("calcTableBody");
+    tbody.innerHTML = "";
+
+    variants.forEach((v, i) => {
+      const fullSKU   = sku + v.skuSuffix;
+      const fullPrice = fmtPrice(price + v.priceAdd);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${v.name}</td>
+        <td class="sku-cell" id="sku-${i}">${fullSKU}</td>
+        <td class="price-cell">${fullPrice}</td>
+        <td><button class="btn-copy-sm" id="cpbtn-${i}" onclick="copySKU(${i})">Copy SKU</button></td>`;
+      tbody.appendChild(tr);
+    });
+
+    show("calcResults");
+  }
+
+  function copySKU(i) {
+    const text = document.getElementById(`sku-${i}`).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(`cpbtn-${i}`);
+      btn.textContent = "Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy SKU"; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  function copyAllVariants() {
+    const rows = document.querySelectorAll("#calcTableBody tr");
+    const lines = ["Variant\tSKU\tPrice"];
+    rows.forEach(tr => {
+      const cells = tr.querySelectorAll("td");
+      lines.push(`${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}`);
+    });
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      const btn = event.target;
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy All (TSV)"; }, 2000);
+    }).catch(() => alert("Could not copy."));
+  }
 </script>
 </body>
 </html>
