@@ -337,8 +337,13 @@
       font-family: "Menlo","Consolas",monospace;
       font-size: 0.82rem;
       color: #333;
+      white-space: nowrap;
     }
-    .price-cell { font-weight: 600; color: #1a1a1a; }
+    .sku-cell .btn-copy-sm, .price-cell .btn-copy-sm {
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    .price-cell { font-weight: 600; color: #1a1a1a; white-space: nowrap; }
     .btn-copy-sm {
       padding: 4px 10px;
       border: 1px solid #3d7a35;
@@ -406,7 +411,6 @@
               <th>Variant</th>
               <th>SKU</th>
               <th>Price</th>
-              <th></th>
             </tr>
           </thead>
           <tbody id="calcTableBody"></tbody>
@@ -692,21 +696,27 @@
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${v.name}</td>
-        <td class="sku-cell" id="sku-${i}">${fullSKU}</td>
-        <td class="price-cell">${fullPrice}</td>
-        <td><button class="btn-copy-sm" id="cpbtn-${i}" onclick="copySKU(${i})">Copy SKU</button></td>`;
+        <td class="sku-cell">
+          <span id="sku-${i}">${fullSKU}</span>
+          <button class="btn-copy-sm" id="cpsku-${i}" onclick="copyText('sku-${i}','cpsku-${i}')">Copy</button>
+        </td>
+        <td class="price-cell">
+          <span id="price-${i}">${fullPrice}</span>
+          <button class="btn-copy-sm" id="cpprice-${i}" onclick="copyText('price-${i}','cpprice-${i}')">Copy</button>
+        </td>`;
       tbody.appendChild(tr);
     });
 
     show("calcResults");
   }
 
-  function copySKU(i) {
-    const text = document.getElementById(`sku-${i}`).textContent;
+  function copyText(spanId, btnId) {
+    const text = document.getElementById(spanId).textContent;
     navigator.clipboard.writeText(text).then(() => {
-      const btn = document.getElementById(`cpbtn-${i}`);
-      btn.textContent = "Copied!"; btn.classList.add("copied");
-      setTimeout(() => { btn.textContent = "Copy SKU"; btn.classList.remove("copied"); }, 1800);
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1500);
     }).catch(() => alert("Could not copy."));
   }
 
