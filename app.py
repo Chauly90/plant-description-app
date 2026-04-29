@@ -26,45 +26,52 @@ def icon(name):
 
 SYSTEM_PROMPT = f"""You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-friendly descriptions in English.
 
-WRITING RULES — follow strictly:
-1. CONCISE: Keep descriptions about 30% shorter than typical. Every sentence must add value. No filler.
-2. NO EM DASHES: Never use — or – in any text. Use commas or rewrite instead.
-3. NO BOLD TEXT: Never wrap any word in ** or <b> or <strong>.
-4. SKIP IF NOT APPLICABLE: If a feature does not apply to this plant (e.g. it does not purify air, does not release oxygen at night, has no culinary use), simply omit it. Do not write "no" answers.
-5. PET SAFETY LANGUAGE:
-   - If the plant IS safe for pets: write "This plant is pet friendly" naturally in the text.
-   - If the plant is NOT safe for pets: use soft language such as "best placed away from curious cats and dogs" or "keep it out of reach of pets as nibbling the leaves may cause stomach upset." NEVER use the words: toxic, non-toxic, poisonous, or any variation.
-6. CHILD SAFETY LANGUAGE: Same rule as pets. Use gentle phrasing like "place out of reach of young children" or "the sap may irritate sensitive skin, so wash hands after handling." NEVER use: toxic, poisonous, dangerous, hazardous.
-7. NO REPETITION: Do not repeat the same information across paragraphs or tabs.
+WRITING RULES — follow strictly for ALL sections:
+1. CONCISE: Every sentence must add value. No filler.
+2. NO EM DASHES: Never use — or –. Use commas or rewrite.
+3. NO BOLD TEXT: Never use ** or <b> or <strong>.
+4. SKIP IF NOT APPLICABLE: Omit features that are not true for this plant. No "no" answers.
+5. PET SAFETY: If safe, write "This plant is pet friendly" naturally. If not safe, use soft language like "best placed away from curious cats and dogs." NEVER use: toxic, non-toxic, poisonous.
+6. CHILD SAFETY: Use gentle phrasing like "place out of reach of young children." NEVER use: toxic, poisonous, dangerous, hazardous.
+7. NO REPETITION: Do not repeat info across sections.
 
-CONTENT TO COVER per plant:
+TITLE rules:
+- Exactly 60-70 characters (count carefully)
+- Plant name first, followed by a compelling phrase
+- Use power words that spark curiosity or desire (e.g., "stunning," "effortless," "beloved," "transforms," "thrives")
+- Optimized for AI Search: natural language, direct answer to search intent, no keyword stuffing
+- No em dashes, no bold
 
-TAB1 — Description: write exactly 3 separate paragraphs, each focused on ONE topic only:
-- Para 1 (identity): common name, scientific name, nicknames, brief origin/family
+META DESCRIPTION rules:
+- Exactly 150-160 characters (count carefully)
+- Start with the plant name or a direct benefit statement
+- Include 1 secondary keyword (e.g., care tips, succulent, houseplant, indoor plant)
+- Snippet-friendly: front-load the most valuable info so AI can extract it easily
+- Natural sentence flow, no keyword stuffing, no em dashes
+
+TAB1 — Description: exactly 3 paragraphs, each on ONE topic:
+- Para 1 (identity): common name, scientific name, nicknames, brief origin
 - Para 2 (appearance): leaf/stem shape, color, texture, size, growth habit, best pot style
-- Para 3 (benefits & home): practical uses (healing, culinary, air purification only if true), pet/child safety note, where to place it at home
+- Para 3 (benefits & home): practical uses (only if true), pet/child safety, where to place at home
 
 TAB2 — Care: 5 paragraphs, one per topic. No overlap with TAB1.
-- Light: specific needs, tolerance, risks
-- Water: frequency, soil-check method, drainage tips
-- Soil: best mix, amendments
-- Temperature & Humidity: ideal °F range, cold minimum, humidity preference
-- Fertilizer: schedule and type
+- Light / Water / Soil / Temperature & Humidity / Fertilizer
 
-TAB3 — USDA Hardiness: include ALL of the following for this specific plant:
-- The USDA zone map image (always include)
-- Zone range (e.g., "Zones 9-11")
-- Minimum survival temperature in both °F and °C
-- Whether it is grown outdoors year-round or must be brought indoors in cold climates
-- One sentence on frost tolerance or winter care if relevant
+TAB3 — USDA Hardiness: zone range, minimum temperature in °F and °C, outdoor vs indoor guidance, frost note.
 
-OUTPUT FORMAT — Start your response with the EXACT text ===TAB1=== on its own line. Output ONLY the three sections below, nothing before or after, no preamble:
+OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===, nothing before or after:
+
+===TITLE===
+[title — plain text, 60-70 characters, no HTML]
+
+===META===
+[meta description — plain text, 150-160 characters, no HTML]
 
 ===TAB1===
 Exactly 3 paragraphs separated by <br><br>
-- Para 1 (identity: name, scientific name, origin) starts with: {icon('cactus')}
-- Para 2 (appearance: shape, color, texture, size, pot style) starts with: {icon('soil')}
-- Para 3 (benefits, uses, pet/child safety, where to place) starts with: {icon('house')}
+- Para 1 starts with: {icon('cactus')}
+- Para 2 starts with: {icon('soil')}
+- Para 3 starts with: {icon('house')}
 
 ===TAB2===
 5 paragraphs separated by <br><br>, each starting with its icon:
@@ -73,41 +80,51 @@ Exactly 3 paragraphs separated by <br><br>
 ===TAB3===
 <p><img width="1024" height="887" data-src="//cdn.shopify.com/s/files/1/2198/4603/files/map-of-growing-zones-usa-17-01_1024x1024.jpg?v=1553694426" class="lazyload" alt=""></p>
 <p>USDA Hardiness Zones [X]-[Y] | Minimum temperature: [°F] ([°C])</p>
-<p>[One sentence: outdoor year-round suitability and/or frost/winter care note.]</p>"""
+<p>[Outdoor year-round suitability and frost/winter care note.]</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}
 
-Write the complete 3-tab product description. Follow all writing rules exactly.
-Use the correct icons, separate paragraphs with <br><br>, include accurate USDA zones for {plant_name}.
-Remember: no em dashes, no bold, skip inapplicable features, use soft pet/child safety language."""
+Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
+- Title: 60-70 characters, plant name first, power words, AI-search optimized
+- Meta: 150-160 characters, snippet-friendly, no keyword stuffing
+- Tabs: correct icons, paragraphs separated by <br><br>, accurate USDA zones
+- No em dashes, no bold, soft pet/child safety language, skip inapplicable features"""
+
+
+def parse_all(text: str):
+    """Parse TITLE, META, TAB1, TAB2, TAB3 from Claude output."""
+    import sys
+
+    def between(marker_a, marker_b):
+        m = re.search(rf"=+\s*{marker_a}\s*=+\s*(.*?)\s*=+\s*{marker_b}\s*=+", text, re.DOTALL)
+        return m.group(1).strip() if m else None
+
+    def after(marker):
+        m = re.search(rf"=+\s*{marker}\s*=+\s*(.*)", text, re.DOTALL)
+        if not m:
+            return None
+        return re.sub(r'\s*=+\s*$', '', m.group(1)).strip()
+
+    title = between("TITLE", "META")
+    meta  = between("META",  "TAB1")
+    tab1  = between("TAB1",  "TAB2")
+    tab2  = between("TAB2",  "TAB3")
+    tab3  = after("TAB3")
+
+    if all([title, meta, tab1, tab2, tab3]):
+        print(f"[PARSE_OK] title={len(title)} meta={len(meta)}", file=sys.stderr, flush=True)
+        return title, meta, tab1, tab2, tab3
+
+    print(f"[PARSE_FAILED] text={text[:600]!r}", file=sys.stderr, flush=True)
+    return None, None, None, None, None
 
 
 def parse_tabs(text: str):
-    import sys
-    # TAB1 and TAB2: extract between markers
-    t1 = re.search(r"=+\s*TAB1\s*=+\s*(.*?)\s*=+\s*TAB2\s*=+", text, re.DOTALL)
-    t2 = re.search(r"=+\s*TAB2\s*=+\s*(.*?)\s*=+\s*TAB3\s*=+", text, re.DOTALL)
-    # TAB3: always last — take everything after the marker, strip trailing = signs
-    t3_match = re.search(r"=+\s*TAB3\s*=+\s*(.*)", text, re.DOTALL)
-    if t3_match:
-        t3_content = re.sub(r'\s*=+\s*$', '', t3_match.group(1)).strip()
-    else:
-        t3_content = None
-
-    if t1 and t2 and t3_content:
-        print(f"[PARSE_OK] tab3 length={len(t3_content)}", file=sys.stderr, flush=True)
-        return t1.group(1).strip(), t2.group(1).strip(), t3_content
-
-    # Fallback: split on any TAB marker
-    parts = re.split(r"=*\s*TAB[123]\s*=*", text)
-    if len(parts) >= 4:
-        print(f"[PARSE_FALLBACK] parts={len(parts)}", file=sys.stderr, flush=True)
-        return parts[1].strip(), parts[2].strip(), parts[3].strip()
-
-    print(f"[PARSE_FAILED] text={text[:500]!r}", file=sys.stderr, flush=True)
-    return None, None, None
+    """Legacy wrapper — returns (tab1, tab2, tab3) only."""
+    _, _, tab1, tab2, tab3 = parse_all(text)
+    return tab1, tab2, tab3
 
 
 def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
@@ -135,10 +152,10 @@ def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
 def parse():
     data = request.get_json() or {}
     text = data.get("text", "")
-    tab1, tab2, tab3 = parse_tabs(text)
+    title, meta, tab1, tab2, tab3 = parse_all(text)
     if not tab1:
         return jsonify({"error": "Could not parse"}), 400
-    return jsonify({"html": assemble_html(tab1, tab2, tab3)})
+    return jsonify({"html": assemble_html(tab1, tab2, tab3), "title": title or "", "meta": meta or ""})
 
 
 @app.route("/")
@@ -181,13 +198,13 @@ def generate():
                     full_text += chunk
                     yield f"data: {json.dumps({'type': 'chunk', 'text': chunk})}\n\n"
 
-            tab1, tab2, tab3 = parse_tabs(full_text)
+            title, meta, tab1, tab2, tab3 = parse_all(full_text)
             if not tab1:
                 yield f"data: {json.dumps({'type': 'error', 'message': 'Could not parse response. Please try again.'})}\n\n"
                 return
 
             html = assemble_html(tab1, tab2, tab3)
-            yield f"data: {json.dumps({'type': 'done', 'html': html})}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'html': html, 'title': title or '', 'meta': meta or ''})}\n\n"
 
         except anthropic.APIError as e:
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"

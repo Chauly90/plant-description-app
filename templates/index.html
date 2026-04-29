@@ -153,6 +153,49 @@
     .btn-copy:hover { background: #f0f8f0; }
     .btn-copy.copied { background: #3d7a35; color: white; }
 
+    /* ── SEO card ── */
+    .seo-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .seo-card-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid #eee;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2d5a27;
+    }
+    .seo-fields { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .seo-field label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .char-count { font-weight: 400; color: #888; }
+    .char-count.ok   { color: #3d7a35; }
+    .char-count.warn { color: #d97706; }
+    .seo-value {
+      background: #f9fdf9;
+      border: 1px solid #dde8dd;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+      word-break: break-word;
+      cursor: text;
+      user-select: all;
+    }
+    .seo-field-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+
     /* ── Preview panel ── */
     .preview-panel { padding: 24px; }
 
@@ -257,6 +300,36 @@
     <strong>Error:</strong> <span id="errorMsg"></span>
   </div>
 
+  <!-- SEO card: Title + Meta -->
+  <div id="seoCard" class="seo-card hidden">
+    <div class="seo-card-header">SEO Title &amp; Meta Description</div>
+    <div class="seo-fields">
+
+      <div class="seo-field">
+        <label>
+          Title
+          <span class="char-count" id="titleCount">0 chars</span>
+        </label>
+        <div class="seo-value" id="titleValue"></div>
+        <div class="seo-field-actions">
+          <button class="btn-copy" id="copyTitleBtn" onclick="copyField('titleValue','copyTitleBtn')">Copy Title</button>
+        </div>
+      </div>
+
+      <div class="seo-field">
+        <label>
+          Meta Description
+          <span class="char-count" id="metaCount">0 chars</span>
+        </label>
+        <div class="seo-value" id="metaValue"></div>
+        <div class="seo-field-actions">
+          <button class="btn-copy" id="copyMetaBtn" onclick="copyField('metaValue','copyMetaBtn')">Copy Meta</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Result -->
   <div id="resultCard" class="result-card hidden">
     <div class="result-header">
@@ -283,7 +356,7 @@
 
 <script>
   let generatedHTML = "";
-  let streamText   = "";
+  let streamText    = "";
 
   document.getElementById("plantInput").addEventListener("keydown", e => {
     if (e.key === "Enter") generate();
@@ -293,9 +366,7 @@
     const plantName = document.getElementById("plantInput").value.trim();
     if (!plantName) return;
 
-    // Reset UI
-    hide("errorCard");
-    hide("resultCard");
+    hide("errorCard"); hide("resultCard"); hide("seoCard");
     show("genCard");
     streamText = "";
     document.getElementById("streamBox").textContent = "";
@@ -322,7 +393,6 @@
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop();
@@ -335,13 +405,11 @@
           if (evt.type === "chunk") {
             streamText += evt.text;
             const box = document.getElementById("streamBox");
-            box.textContent = streamText.length > 800
-              ? "…" + streamText.slice(-800)
-              : streamText;
+            box.textContent = streamText.length > 800 ? "…" + streamText.slice(-800) : streamText;
             box.scrollTop = box.scrollHeight;
           } else if (evt.type === "done") {
             generatedHTML = evt.html;
-            displayResult(plantName, evt.html);
+            displayResult(plantName, evt.html, evt.title || "", evt.meta || "");
             gotResult = true;
           } else if (evt.type === "error") {
             throw new Error(evt.message);
@@ -349,16 +417,19 @@
         }
       }
 
-      // Fallback: stream closed without a done event — try parsing what we got
       if (!gotResult && streamText) {
         const resp2 = await fetch("/parse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: streamText, plant_name: plantName }),
+          body: JSON.stringify({ text: streamText }),
         });
         if (resp2.ok) {
           const d = await resp2.json();
-          if (d.html) { generatedHTML = d.html; displayResult(plantName, d.html); gotResult = true; }
+          if (d.html) {
+            generatedHTML = d.html;
+            displayResult(plantName, d.html, d.title || "", d.meta || "");
+            gotResult = true;
+          }
         }
         if (!gotResult) throw new Error("Generation completed but result could not be parsed. Please try again.");
       }
@@ -372,18 +443,29 @@
     }
   }
 
-  function displayResult(plantName, html) {
+  function setCharCount(countId, text, min, max) {
+    const el = document.getElementById(countId);
+    const n  = text.length;
+    el.textContent = `${n} chars`;
+    el.className = "char-count " + (n >= min && n <= max ? "ok" : "warn");
+  }
+
+  function displayResult(plantName, html, title, meta) {
+    // ---- SEO fields ----
+    document.getElementById("titleValue").textContent = title;
+    document.getElementById("metaValue").textContent  = meta;
+    setCharCount("titleCount", title, 60, 70);
+    setCharCount("metaCount",  meta,  150, 160);
+    show("seoCard");
+
+    // ---- Tabs result ----
     document.getElementById("resultTitle").textContent = plantName;
 
-    // ---- Preview ----
-    // Convert data-src → src and fix protocol-relative URLs for preview
     let preview = html
       .replace(/data-src="\/\//g, 'src="https://')
       .replace(/data-src="/g,      'src="');
-
     document.getElementById("previewContent").innerHTML = preview;
 
-    // Wire up tab clicks in preview
     const container = document.getElementById("previewContent");
     container.querySelectorAll("ul.tabs li a").forEach(a => {
       a.addEventListener("click", e => {
@@ -396,15 +478,10 @@
       });
     });
 
-    // ---- Code ----
     document.getElementById("codeContent").textContent = html;
-
-    // Reset view to Preview
     document.getElementById("previewPanel").classList.remove("hidden");
     document.getElementById("codePanel").classList.add("hidden");
-    document.querySelectorAll(".btn-toggle").forEach((b, i) => {
-      b.classList.toggle("active", i === 0);
-    });
+    document.querySelectorAll(".btn-toggle").forEach((b, i) => b.classList.toggle("active", i === 0));
 
     show("resultCard");
   }
@@ -412,23 +489,28 @@
   function switchView(view, btn) {
     document.querySelectorAll(".btn-toggle").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    if (view === "preview") {
-      show("previewPanel"); hide("codePanel");
-    } else {
-      hide("previewPanel"); show("codePanel");
-    }
+    if (view === "preview") { show("previewPanel"); hide("codePanel"); }
+    else                    { hide("previewPanel"); show("codePanel"); }
   }
 
   async function copyHTML() {
     try {
       await navigator.clipboard.writeText(generatedHTML);
       const btn = document.getElementById("copyBtn");
-      btn.textContent = "Copied!";
-      btn.classList.add("copied");
+      btn.textContent = "Copied!"; btn.classList.add("copied");
       setTimeout(() => { btn.textContent = "Copy HTML"; btn.classList.remove("copied"); }, 2000);
-    } catch {
-      alert("Could not copy automatically. Switch to HTML Code tab and copy manually.");
-    }
+    } catch { alert("Could not copy. Switch to HTML Code tab and copy manually."); }
+  }
+
+  async function copyField(valueId, btnId) {
+    const text = document.getElementById(valueId).textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = "Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 2000);
+    } catch { alert("Could not copy automatically."); }
   }
 
   function show(id) { document.getElementById(id).classList.remove("hidden"); }
