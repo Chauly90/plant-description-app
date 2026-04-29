@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Description Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f4f7f4;
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #2d5a27;
+      color: white;
+      text-align: center;
+      padding: 32px 20px 28px;
+    }
+    header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.3px; }
+    header p  { margin-top: 6px; opacity: 0.8; font-size: 0.95rem; }
+
+    /* ── Layout ── */
+    .page { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* ── Input card ── */
+    .input-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      display: flex;
+      gap: 10px;
+    }
+    .input-card input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 2px solid #dde8dd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color .2s;
+      outline: none;
+    }
+    .input-card input:focus  { border-color: #3d7a35; }
+    .input-card input::placeholder { color: #aaa; }
+    .btn-primary {
+      padding: 11px 26px;
+      background: #3d7a35;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, opacity .2s;
+    }
+    .btn-primary:hover:not(:disabled) { background: #2d5a27; }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ── Generating card ── */
+    .gen-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .gen-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 3px solid #dde8dd;
+      border-top-color: #3d7a35;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gen-label { font-weight: 600; color: #2d5a27; }
+    .gen-label span { font-weight: 400; color: #555; }
+    .stream-box {
+      padding: 14px 20px;
+      font-family: "Menlo", "Consolas", monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #444;
+      max-height: 160px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #fafffe;
+    }
+    .stream-box::after {
+      content: "▋";
+      animation: blink 1s step-end infinite;
+      color: #3d7a35;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ── Result card ── */
+    .result-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid #eee;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .result-title { font-weight: 700; font-size: 1rem; color: #2d5a27; }
+    .view-toggle { display: flex; gap: 4px; }
+    .btn-toggle {
+      padding: 5px 14px;
+      border: 1px solid #dde8dd;
+      background: #f9fdf9;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-toggle.active {
+      background: #3d7a35;
+      color: white;
+      border-color: #3d7a35;
+    }
+    .btn-copy {
+      padding: 5px 14px;
+      border: 1px solid #3d7a35;
+      color: #3d7a35;
+      background: white;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-copy:hover { background: #f0f8f0; }
+    .btn-copy.copied { background: #3d7a35; color: white; }
+
+    /* ── Preview panel ── */
+    .preview-panel { padding: 24px; }
+
+    /* Shopify tab styles inside preview */
+    .preview-panel ul.tabs {
+      list-style: none;
+      display: flex;
+      border-bottom: 2px solid #e0e0e0;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .preview-panel ul.tabs li a {
+      display: block;
+      padding: 9px 20px;
+      color: #666;
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      font-size: 0.95rem;
+      transition: color .15s;
+    }
+    .preview-panel ul.tabs li a:hover { color: #3d7a35; }
+    .preview-panel ul.tabs li a.active {
+      color: #2d5a27;
+      border-bottom-color: #2d5a27;
+      font-weight: 600;
+    }
+    .preview-panel ul.tabs-content { list-style: none; }
+    .preview-panel ul.tabs-content > li {
+      display: none;
+      line-height: 1.75;
+      color: #333;
+      font-size: 0.95rem;
+    }
+    .preview-panel ul.tabs-content > li.active { display: block; }
+    .preview-panel img.lazyload {
+      display: inline;
+      vertical-align: middle;
+      margin-right: 5px;
+      width: 16px;
+      height: 16px;
+    }
+    .preview-panel p { margin: 8px 0; }
+
+    /* ── Code panel ── */
+    .code-panel {
+      padding: 0;
+      background: #1e1e1e;
+    }
+    .code-panel pre {
+      padding: 20px;
+      overflow-x: auto;
+      font-family: "Menlo", "Consolas", monospace;
+      font-size: 0.78rem;
+      line-height: 1.6;
+      color: #d4d4d4;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* ── Error ── */
+    .error-card {
+      background: #fff5f5;
+      border: 1px solid #fca5a5;
+      border-radius: 12px;
+      margin-top: 20px;
+      padding: 16px 20px;
+      color: #b91c1c;
+      font-size: 0.95rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 Plant Description Generator</h1>
+  <p>Enter a plant name — AI will write a complete Shopify product description</p>
+</header>
+
+<div class="page">
+
+  <!-- Input -->
+  <div class="input-card">
+    <input id="plantInput" type="text"
+           placeholder="e.g. Golden Pothos, Monstera Deliciosa, Aloe Vera, Bird of Paradise…" />
+    <button id="generateBtn" class="btn-primary" onclick="generate()">Generate</button>
+  </div>
+
+  <!-- Generating state -->
+  <div id="genCard" class="gen-card hidden">
+    <div class="gen-header">
+      <div class="spinner"></div>
+      <div class="gen-label">Generating description for <span id="genPlantName"></span>…</div>
+    </div>
+    <div id="streamBox" class="stream-box"></div>
+  </div>
+
+  <!-- Error -->
+  <div id="errorCard" class="error-card hidden">
+    <strong>Error:</strong> <span id="errorMsg"></span>
+  </div>
+
+  <!-- Result -->
+  <div id="resultCard" class="result-card hidden">
+    <div class="result-header">
+      <div class="result-title" id="resultTitle"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <div class="view-toggle">
+          <button class="btn-toggle active" onclick="switchView('preview', this)">Preview</button>
+          <button class="btn-toggle" onclick="switchView('code', this)">HTML Code</button>
+        </div>
+        <button class="btn-copy" id="copyBtn" onclick="copyHTML()">Copy HTML</button>
+      </div>
+    </div>
+
+    <div id="previewPanel" class="preview-panel">
+      <div id="previewContent"></div>
+    </div>
+
+    <div id="codePanel" class="code-panel hidden">
+      <pre id="codeContent"></pre>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  let generatedHTML = "";
+  let streamText   = "";
+
+  document.getElementById("plantInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") generate();
+  });
+
+  async function generate() {
+    const plantName = document.getElementById("plantInput").value.trim();
+    if (!plantName) return;
+
+    // Reset UI
+    hide("errorCard");
+    hide("resultCard");
+    show("genCard");
+    streamText = "";
+    document.getElementById("streamBox").textContent = "";
+    document.getElementById("genPlantName").textContent = `"${plantName}"`;
+    document.getElementById("generateBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.error || "Server error");
+      }
+
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let   buffer  = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          let evt;
+          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+
+          if (evt.type === "chunk") {
+            streamText += evt.text;
+            // Show last 800 chars so box doesn't grow too long
+            const box = document.getElementById("streamBox");
+            box.textContent = streamText.length > 800
+              ? "…" + streamText.slice(-800)
+              : streamText;
+            box.scrollTop = box.scrollHeight;
+
+          } else if (evt.type === "done") {
+            generatedHTML = evt.html;
+            displayResult(plantName, evt.html);
+
+          } else if (evt.type === "error") {
+            throw new Error(evt.message);
+          }
+        }
+      }
+
+    } catch (err) {
+      document.getElementById("errorMsg").textContent = err.message;
+      show("errorCard");
+    } finally {
+      hide("genCard");
+      document.getElementById("generateBtn").disabled = false;
+    }
+  }
+
+  function displayResult(plantName, html) {
+    document.getElementById("resultTitle").textContent = plantName;
+
+    // ---- Preview ----
+    // Convert data-src → src and fix protocol-relative URLs for preview
+    let preview = html
+      .replace(/data-src="\/\//g, 'src="https://')
+      .replace(/data-src="/g,      'src="');
+
+    document.getElementById("previewContent").innerHTML = preview;
+
+    // Wire up tab clicks in preview
+    const container = document.getElementById("previewContent");
+    container.querySelectorAll("ul.tabs li a").forEach(a => {
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        const target = a.getAttribute("href");
+        container.querySelectorAll("ul.tabs li a").forEach(x => x.classList.remove("active"));
+        container.querySelectorAll("ul.tabs-content > li").forEach(x => x.classList.remove("active"));
+        a.classList.add("active");
+        container.querySelector(target).classList.add("active");
+      });
+    });
+
+    // ---- Code ----
+    document.getElementById("codeContent").textContent = html;
+
+    // Reset view to Preview
+    document.getElementById("previewPanel").classList.remove("hidden");
+    document.getElementById("codePanel").classList.add("hidden");
+    document.querySelectorAll(".btn-toggle").forEach((b, i) => {
+      b.classList.toggle("active", i === 0);
+    });
+
+    show("resultCard");
+  }
+
+  function switchView(view, btn) {
+    document.querySelectorAll(".btn-toggle").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    if (view === "preview") {
+      show("previewPanel"); hide("codePanel");
+    } else {
+      hide("previewPanel"); show("codePanel");
+    }
+  }
+
+  async function copyHTML() {
+    try {
+      await navigator.clipboard.writeText(generatedHTML);
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "Copied!";
+      btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy HTML"; btn.classList.remove("copied"); }, 2000);
+    } catch {
+      alert("Could not copy automatically. Switch to HTML Code tab and copy manually.");
+    }
+  }
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+  function hide(id) { document.getElementById(id).classList.add("hidden"); }
+</script>
+</body>
+</html>
