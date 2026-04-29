@@ -124,6 +124,16 @@ def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
     )
 
 
+@app.route("/parse", methods=["POST"])
+def parse():
+    data = request.get_json() or {}
+    text = data.get("text", "")
+    tab1, tab2, tab3 = parse_tabs(text)
+    if not tab1:
+        return jsonify({"error": "Could not parse"}), 400
+    return jsonify({"html": assemble_html(tab1, tab2, tab3)})
+
+
 @app.route("/")
 def index():
     return render_template("index.html")

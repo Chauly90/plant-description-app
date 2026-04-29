@@ -317,6 +317,7 @@
       const reader  = resp.body.getReader();
       const decoder = new TextDecoder();
       let   buffer  = "";
+      let   gotResult = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -341,10 +342,25 @@
           } else if (evt.type === "done") {
             generatedHTML = evt.html;
             displayResult(plantName, evt.html);
+            gotResult = true;
           } else if (evt.type === "error") {
             throw new Error(evt.message);
           }
         }
+      }
+
+      // Fallback: stream closed without a done event — try parsing what we got
+      if (!gotResult && streamText) {
+        const resp2 = await fetch("/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: streamText, plant_name: plantName }),
+        });
+        if (resp2.ok) {
+          const d = await resp2.json();
+          if (d.html) { generatedHTML = d.html; displayResult(plantName, d.html); gotResult = true; }
+        }
+        if (!gotResult) throw new Error("Generation completed but result could not be parsed. Please try again.");
       }
 
     } catch (err) {
