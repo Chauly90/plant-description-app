@@ -36,18 +36,18 @@ WRITING RULES — follow strictly for ALL sections:
 7. NO REPETITION: Do not repeat info across sections.
 
 TITLE rules:
-- Exactly 60-70 characters (count carefully)
-- Plant name first, followed by a compelling phrase
-- Use power words that spark curiosity or desire (e.g., "stunning," "effortless," "beloved," "transforms," "thrives")
-- Optimized for AI Search: natural language, direct answer to search intent, no keyword stuffing
-- No em dashes, no bold
+- 70-80 characters (count carefully, must be at least 70)
+- Plant name must appear first in the title
+- After the plant name, highlight 1-2 of this plant's most notable functional features (e.g., "easy care," "air-purifying," "pet friendly," "drought tolerant," "fast growing," "low light," "healing gel")
+- Use natural, engaging language optimized for AI Search — answers the searcher's intent directly
+- No em dashes, no bold, no keyword stuffing
 
 META DESCRIPTION rules:
-- Exactly 150-160 characters (count carefully)
-- Start with the plant name or a direct benefit statement
-- Include 1 secondary keyword (e.g., care tips, succulent, houseplant, indoor plant)
-- Snippet-friendly: front-load the most valuable info so AI can extract it easily
-- Natural sentence flow, no keyword stuffing, no em dashes
+- 160-200 characters (count carefully, must be at least 160)
+- Written from the buyer's perspective: why would someone want this plant? What problem does it solve or what joy does it bring?
+- Include the plant's main keyword (name) and at least 1 secondary keyword (e.g., succulent, houseplant, indoor plant, low-maintenance, care guide)
+- Front-load the most valuable information so AI assistants can extract it as a featured snippet
+- Natural sentence flow, conversational tone, no keyword stuffing, no em dashes
 
 TAB1 — Description: exactly 3 paragraphs, each on ONE topic:
 - Para 1 (identity): common name, scientific name, nicknames, brief origin
@@ -87,8 +87,8 @@ def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}
 
 Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
-- Title: 60-70 characters, plant name first, power words, AI-search optimized
-- Meta: 150-160 characters, snippet-friendly, no keyword stuffing
+- Title: 70-80 characters, plant name first, then notable functional features, AI-search optimized
+- Meta: 160-200 characters, buyer intent focus (why buy this plant?), snippet-friendly, no keyword stuffing
 - Tabs: correct icons, paragraphs separated by <br><br>, accurate USDA zones
 - No em dashes, no bold, soft pet/child safety language, skip inapplicable features"""
 
