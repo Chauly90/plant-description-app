@@ -95,10 +95,13 @@ Use the correct icons per tab, separate paragraphs with <br><br>, and include ac
 
 
 def parse_tabs(text: str):
-    t1 = re.search(r"===TAB1===\s*(.*?)\s*===TAB2===", text, re.DOTALL)
-    t2 = re.search(r"===TAB2===\s*(.*?)\s*===TAB3===", text, re.DOTALL)
-    t3 = re.search(r"===TAB3===\s*(.*?)(?:\s*===|$)", text, re.DOTALL)
+    # Flexible match: allows spaces inside ===, or slight variations
+    t1 = re.search(r"={2,4}\s*TAB1\s*={2,4}\s*(.*?)\s*={2,4}\s*TAB2\s*={2,4}", text, re.DOTALL)
+    t2 = re.search(r"={2,4}\s*TAB2\s*={2,4}\s*(.*?)\s*={2,4}\s*TAB3\s*={2,4}", text, re.DOTALL)
+    t3 = re.search(r"={2,4}\s*TAB3\s*={2,4}\s*(.*?)(?:\s*={2,4}|$)", text, re.DOTALL)
     if not all([t1, t2, t3]):
+        import sys
+        print(f"[PARSE_FAILED] First 300 chars: {text[:300]}", file=sys.stderr, flush=True)
         return None, None, None
     return t1.group(1).strip(), t2.group(1).strip(), t3.group(1).strip()
 
