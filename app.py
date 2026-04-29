@@ -86,20 +86,27 @@ Remember: no em dashes, no bold, skip inapplicable features, use soft pet/child 
 
 def parse_tabs(text: str):
     import sys
-    # Try strict match first: ===TAB1=== style (any number of = signs)
+    # TAB1 and TAB2: extract between markers
     t1 = re.search(r"=+\s*TAB1\s*=+\s*(.*?)\s*=+\s*TAB2\s*=+", text, re.DOTALL)
     t2 = re.search(r"=+\s*TAB2\s*=+\s*(.*?)\s*=+\s*TAB3\s*=+", text, re.DOTALL)
-    t3 = re.search(r"=+\s*TAB3\s*=+\s*(.*?)(?:\s*=+|$)", text, re.DOTALL)
-    if t1 and t2 and t3:
-        return t1.group(1).strip(), t2.group(1).strip(), t3.group(1).strip()
+    # TAB3: always last — take everything after the marker, strip trailing = signs
+    t3_match = re.search(r"=+\s*TAB3\s*=+\s*(.*)", text, re.DOTALL)
+    if t3_match:
+        t3_content = re.sub(r'\s*=+\s*$', '', t3_match.group(1)).strip()
+    else:
+        t3_content = None
 
-    # Fallback: try splitting by TAB markers without equals
+    if t1 and t2 and t3_content:
+        print(f"[PARSE_OK] tab3 length={len(t3_content)}", file=sys.stderr, flush=True)
+        return t1.group(1).strip(), t2.group(1).strip(), t3_content
+
+    # Fallback: split on any TAB marker
     parts = re.split(r"=*\s*TAB[123]\s*=*", text)
     if len(parts) >= 4:
-        print(f"[PARSE_FALLBACK] Used split fallback", file=sys.stderr, flush=True)
+        print(f"[PARSE_FALLBACK] parts={len(parts)}", file=sys.stderr, flush=True)
         return parts[1].strip(), parts[2].strip(), parts[3].strip()
 
-    print(f"[PARSE_FAILED] First 500 chars: {text[:500]!r}", file=sys.stderr, flush=True)
+    print(f"[PARSE_FAILED] text={text[:500]!r}", file=sys.stderr, flush=True)
     return None, None, None
 
 
