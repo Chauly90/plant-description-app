@@ -24,86 +24,77 @@ def icon(name):
     return f'<img data-mce-fragment="1" width="16" height="16" data-src="{ICONS[name]}" class="lazyload" alt="">'
 
 
-SYSTEM_PROMPT = f"""You are a professional plant product description writer for succulentsbox.com, an e-commerce plant store. Write accurate, engaging, SEO-friendly descriptions in English.
+SYSTEM_PROMPT = f"""You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-friendly descriptions in English.
 
-For every description, address these functional feature questions:
+WRITING RULES — follow strictly:
+1. CONCISE: Keep descriptions about 30% shorter than typical. Every sentence must add value. No filler.
+2. NO EM DASHES: Never use — or – in any text. Use commas or rewrite instead.
+3. NO BOLD TEXT: Never wrap any word in ** or <b> or <strong>.
+4. SKIP IF NOT APPLICABLE: If a feature does not apply to this plant (e.g. it does not purify air, does not release oxygen at night, has no culinary use), simply omit it. Do not write "no" answers.
+5. PET SAFETY LANGUAGE:
+   - If the plant IS safe for pets: write "This plant is pet friendly" naturally in the text.
+   - If the plant is NOT safe for pets: use soft language such as "best placed away from curious cats and dogs" or "keep it out of reach of pets as nibbling the leaves may cause stomach upset." NEVER use the words: toxic, non-toxic, poisonous, or any variation.
+6. CHILD SAFETY LANGUAGE: Same rule as pets. Use gentle phrasing like "place out of reach of young children" or "the sap may irritate sensitive skin, so wash hands after handling." NEVER use: toxic, poisonous, dangerous, hazardous.
+7. NO REPETITION: Do not repeat the same information across paragraphs or tabs.
 
-PLACEMENT & ENVIRONMENT:
-- Light & Exposure: Needs direct sun or low-light shade? Thrives under office LEDs? Prone to scorching? Needs rotation?
-- Temperature & Airflow: Handles drafty areas? Sensitive to AC/heater airflow? Needs temperature drop to bloom? Stay outdoors in autumn?
-- Humidity & Moisture: Requires high humidity (bathroom)? Tolerates dry heated air? Suitable for terrarium? Thrives in kitchen steam?
-- Space & Stability: Wide spreading or narrow vertical? Trailing plant needing high shelf? Sensitive to relocation? Deep roots needing large pot?
-- Indoor vs. Outdoor: Strictly indoor or moves outside for summer? Withstands balcony wind and rain?
+CONTENT TO COVER per plant:
 
-SAFETY & HEALTH:
-- Pet Safety: Non-toxic if nibbled? Mild upset or emergency if ingested? Skin/paw irritation? Needs high shelf?
-- Child Safety: Thorns, sharp edges, or berries hazardous for toddlers?
-- Air Purification: Filters toxins like formaldehyde, benzene, carbon monoxide?
-- Sleep Support: Releases oxygen at night (bedroom plant)?
-- Allergy Check: Pollen or strong fragrance triggering sensitivities?
-- Natural Humidity: Helps humidify dry spaces?
+TAB1 — Description (only include points that are true/relevant):
+- What the plant is: common name, scientific name, popular nicknames, brief origin story
+- Appearance: leaf shape, color, texture, growth habit, best potting style
+- Relevant benefits only (air purification if true, pet-friendliness status, bedroom suitability if releases O2 at night, any healing/culinary use)
 
-LIFESTYLE & MAINTENANCE:
-- Travel Schedule: Survives 10-day trip, or needs frequent watering?
-- Watering Routine: Shows thirst by wilting, or hides drought stress?
-- Growth Speed: Slow keeper of shape, or fast-growing vine needing pruning?
-- Pest Resistance: Naturally hardy, or a bug-attracting diva?
-- Feeding Needs: Specialized fertilizer, or happy with standard soil?
-- Utility: Healing (like Aloe), culinary (like herbs), or decorative only?
+TAB2 — Care (Light / Water / Soil / Temperature / Fertilizer):
+- Light: specific needs, tolerance range, risks
+- Water: frequency, how to check soil, drainage tips
+- Soil: best mix and amendments
+- Temperature & Humidity: ideal range in °F, cold limits, humidity preferences
+- Fertilizer: schedule and type
 
-AESTHETICS & VALUE:
-- Rarity: Common favorite or rare collector's find?
-- Visual Style: Architectural modern lines, or soft bohemian trailing?
-- Color Palette: Deep forest green, variegated white, or vivid color pops?
-- Longevity: Seasonal splash, or an heirloom living decades?
-- Potting Compatibility: Hanging basket, ceramic floor pot, or glass terrarium?
-- Investment: Mature specimen or starter plant?
+TAB3 — USDA Hardiness zones for this plant.
 
-GENERAL:
-- Toxic/poisonous status for pets and humans
-- Essential care tips
-- Propagation method
-- Frost tolerance and USDA hardiness zones
-
-OUTPUT — use EXACTLY these three section markers with no text before or after:
+OUTPUT FORMAT — Start your response with the EXACT text ===TAB1=== on its own line. Output ONLY the three sections below, nothing before or after, no preamble:
 
 ===TAB1===
-3 paragraphs separated by <br><br>
-- Para 1 starts with: {icon('cactus')} (what the plant is: common name, scientific name, nicknames, appeal, rarity)
-- Para 2 starts with: {icon('house')} (appearance: leaf shape/color/texture, growth habit, native origin, potting style)
-- Para 3 starts with: {icon('house')} (benefits: air purification, pet/child toxicity status, oxygen at night, feng shui, utility)
+2-3 paragraphs separated by <br><br>
+- Para 1 starts with: {icon('cactus')}
+- Para 2 starts with: {icon('house')}
+- Para 3 (optional, only if there are additional distinct benefits worth mentioning): {icon('house')}
 
 ===TAB2===
-5 paragraphs separated by <br><br>
-- {icon('sun')} light requirements (direct/indirect/low light, scorching risk, office LED suitability, rotation)
-- {icon('water')} watering (frequency, soil dryness test, drainage, drought signs, travel-friendly?)
-- {icon('soil')} soil mix (ideal blend, amendments like perlite/peat/vermiculite)
-- {icon('temperature')} temperature & humidity (ideal °F range, cold minimum, humidity needs, AC/heater sensitivity)
-- {icon('fertilizer')} fertilizing (frequency, fertilizer type, growing vs. dormant season)
+5 paragraphs separated by <br><br>, each starting with its icon:
+{icon('sun')} {icon('water')} {icon('soil')} {icon('temperature')} {icon('fertilizer')}
 
 ===TAB3===
 <p><img width="1024" height="887" data-src="//cdn.shopify.com/s/files/1/2198/4603/files/map-of-growing-zones-usa-17-01_1024x1024.jpg?v=1553694426" class="lazyload" alt="">[USDA Zone range]</p>
-<p>USDA Zone [zone]: to [°C] ([°F])</p>
-(one <p> line per zone)"""
+<p>USDA Zone [zone]: to [°C] ([°F])</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}
 
-Write the complete 3-tab product description following the system instructions exactly.
-Use the correct icons per tab, separate paragraphs with <br><br>, and include accurate USDA zones for {plant_name}."""
+Write the complete 3-tab product description. Follow all writing rules exactly.
+Use the correct icons, separate paragraphs with <br><br>, include accurate USDA zones for {plant_name}.
+Remember: no em dashes, no bold, skip inapplicable features, use soft pet/child safety language."""
 
 
 def parse_tabs(text: str):
-    # Flexible match: allows spaces inside ===, or slight variations
-    t1 = re.search(r"={2,4}\s*TAB1\s*={2,4}\s*(.*?)\s*={2,4}\s*TAB2\s*={2,4}", text, re.DOTALL)
-    t2 = re.search(r"={2,4}\s*TAB2\s*={2,4}\s*(.*?)\s*={2,4}\s*TAB3\s*={2,4}", text, re.DOTALL)
-    t3 = re.search(r"={2,4}\s*TAB3\s*={2,4}\s*(.*?)(?:\s*={2,4}|$)", text, re.DOTALL)
-    if not all([t1, t2, t3]):
-        import sys
-        print(f"[PARSE_FAILED] First 300 chars: {text[:300]}", file=sys.stderr, flush=True)
-        return None, None, None
-    return t1.group(1).strip(), t2.group(1).strip(), t3.group(1).strip()
+    import sys
+    # Try strict match first: ===TAB1=== style (any number of = signs)
+    t1 = re.search(r"=+\s*TAB1\s*=+\s*(.*?)\s*=+\s*TAB2\s*=+", text, re.DOTALL)
+    t2 = re.search(r"=+\s*TAB2\s*=+\s*(.*?)\s*=+\s*TAB3\s*=+", text, re.DOTALL)
+    t3 = re.search(r"=+\s*TAB3\s*=+\s*(.*?)(?:\s*=+|$)", text, re.DOTALL)
+    if t1 and t2 and t3:
+        return t1.group(1).strip(), t2.group(1).strip(), t3.group(1).strip()
+
+    # Fallback: try splitting by TAB markers without equals
+    parts = re.split(r"=*\s*TAB[123]\s*=*", text)
+    if len(parts) >= 4:
+        print(f"[PARSE_FALLBACK] Used split fallback", file=sys.stderr, flush=True)
+        return parts[1].strip(), parts[2].strip(), parts[3].strip()
+
+    print(f"[PARSE_FAILED] First 500 chars: {text[:500]!r}", file=sys.stderr, flush=True)
+    return None, None, None
 
 
 def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
@@ -158,6 +149,8 @@ def generate():
 
     def event_stream():
         try:
+            # Send immediate keepalive so Railway/proxies don't time out
+            yield ": ping\n\n"
             full_text = ""
             with client.messages.stream(
                 model="claude-sonnet-4-6",
