@@ -143,32 +143,47 @@ def generate():
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    try:
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=4096,
-            system=[
-                {
-                    "type": "text",
-                    "text": SYSTEM_PROMPT,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-            messages=[{"role": "user", "content": build_prompt(plant_name)}],
-        )
+    def event_stream():
+        try:
+            full_text = ""
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=4096,
+                system=[
+                    {
+                        "type": "text",
+                        "text": SYSTEM_PROMPT,
+                        "cache_control": {"type": "ephemeral"},
+                    }
+                ],
+                messages=[{"role": "user", "content": build_prompt(plant_name)}],
+            ) as stream:
+                for chunk in stream.text_stream:
+                    full_text += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': chunk})}\n\n"
 
-        full_text = message.content[0].text
-        tab1, tab2, tab3 = parse_tabs(full_text)
-        if not tab1:
-            return jsonify({"error": "Could not parse response. Please try again."}), 500
+            tab1, tab2, tab3 = parse_tabs(full_text)
+            if not tab1:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Could not parse response. Please try again.'})}\n\n"
+                return
 
-        html = assemble_html(tab1, tab2, tab3)
-        return jsonify({"html": html})
+            html = assemble_html(tab1, tab2, tab3)
+            yield f"data: {json.dumps({'type': 'done', 'html': html})}\n\n"
 
-    except anthropic.APIError as e:
-        return jsonify({"error": str(e)}), 500
-    except Exception as e:
-        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+        except anthropic.APIError as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Unexpected error: {str(e)}'})}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        content_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 if __name__ == "__main__":
