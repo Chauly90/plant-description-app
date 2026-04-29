@@ -39,35 +39,41 @@ WRITING RULES — follow strictly:
 
 CONTENT TO COVER per plant:
 
-TAB1 — Description (only include points that are true/relevant):
-- What the plant is: common name, scientific name, popular nicknames, brief origin story
-- Appearance: leaf shape, color, texture, growth habit, best potting style
-- Relevant benefits only (air purification if true, pet-friendliness status, bedroom suitability if releases O2 at night, any healing/culinary use)
+TAB1 — Description: write exactly 3 separate paragraphs, each focused on ONE topic only:
+- Para 1 (identity): common name, scientific name, nicknames, brief origin/family
+- Para 2 (appearance): leaf/stem shape, color, texture, size, growth habit, best pot style
+- Para 3 (benefits & home): practical uses (healing, culinary, air purification only if true), pet/child safety note, where to place it at home
 
-TAB2 — Care (Light / Water / Soil / Temperature / Fertilizer):
-- Light: specific needs, tolerance range, risks
-- Water: frequency, how to check soil, drainage tips
-- Soil: best mix and amendments
-- Temperature & Humidity: ideal range in °F, cold limits, humidity preferences
+TAB2 — Care: 5 paragraphs, one per topic. No overlap with TAB1.
+- Light: specific needs, tolerance, risks
+- Water: frequency, soil-check method, drainage tips
+- Soil: best mix, amendments
+- Temperature & Humidity: ideal °F range, cold minimum, humidity preference
 - Fertilizer: schedule and type
 
-TAB3 — USDA Hardiness zones for this plant.
+TAB3 — USDA Hardiness: include ALL of the following for this specific plant:
+- The USDA zone map image (always include)
+- Zone range (e.g., "Zones 9-11")
+- Minimum survival temperature in both °F and °C
+- Whether it is grown outdoors year-round or must be brought indoors in cold climates
+- One sentence on frost tolerance or winter care if relevant
 
 OUTPUT FORMAT — Start your response with the EXACT text ===TAB1=== on its own line. Output ONLY the three sections below, nothing before or after, no preamble:
 
 ===TAB1===
-2-3 paragraphs separated by <br><br>
+Exactly 3 paragraphs separated by <br><br>
 - Para 1 starts with: {icon('cactus')}
 - Para 2 starts with: {icon('house')}
-- Para 3 (optional, only if there are additional distinct benefits worth mentioning): {icon('house')}
+- Para 3 starts with: {icon('house')}
 
 ===TAB2===
 5 paragraphs separated by <br><br>, each starting with its icon:
 {icon('sun')} {icon('water')} {icon('soil')} {icon('temperature')} {icon('fertilizer')}
 
 ===TAB3===
-<p><img width="1024" height="887" data-src="//cdn.shopify.com/s/files/1/2198/4603/files/map-of-growing-zones-usa-17-01_1024x1024.jpg?v=1553694426" class="lazyload" alt="">[USDA Zone range]</p>
-<p>USDA Zone [zone]: to [°C] ([°F])</p>"""
+<p><img width="1024" height="887" data-src="//cdn.shopify.com/s/files/1/2198/4603/files/map-of-growing-zones-usa-17-01_1024x1024.jpg?v=1553694426" class="lazyload" alt=""></p>
+<p>USDA Hardiness Zones [X]-[Y] | Minimum temperature: [°F] ([°C])</p>
+<p>[One sentence: outdoor year-round suitability and/or frost/winter care note.]</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
