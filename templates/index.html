@@ -309,46 +309,14 @@
         body: JSON.stringify({ plant_name: plantName }),
       });
 
+      const data = await resp.json();
+
       if (!resp.ok) {
-        const err = await resp.json();
-        throw new Error(err.error || "Server error");
+        throw new Error(data.error || "Server error");
       }
 
-      const reader  = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let   buffer  = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          let evt;
-          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
-
-          if (evt.type === "chunk") {
-            streamText += evt.text;
-            // Show last 800 chars so box doesn't grow too long
-            const box = document.getElementById("streamBox");
-            box.textContent = streamText.length > 800
-              ? "…" + streamText.slice(-800)
-              : streamText;
-            box.scrollTop = box.scrollHeight;
-
-          } else if (evt.type === "done") {
-            generatedHTML = evt.html;
-            displayResult(plantName, evt.html);
-
-          } else if (evt.type === "error") {
-            throw new Error(evt.message);
-          }
-        }
-      }
+      generatedHTML = data.html;
+      displayResult(plantName, data.html);
 
     } catch (err) {
       document.getElementById("errorMsg").textContent = err.message;
