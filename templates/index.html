@@ -269,6 +269,32 @@
 
     .hidden { display: none !important; }
 
+    /* ── Channel dividers ── */
+    .channel-section {
+      margin-top: 36px;
+    }
+    .channel-label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .channel-label-text {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: .3px;
+      white-space: nowrap;
+    }
+    .channel-label-line {
+      flex: 1;
+      height: 2px;
+      border-radius: 2px;
+    }
+    .channel-shopify .channel-label-text { color: #2d5a27; }
+    .channel-shopify .channel-label-line  { background: linear-gradient(90deg, #3d7a35 0%, #dde8dd 100%); }
+    .channel-amazon  .channel-label-text { color: #b45309; }
+    .channel-amazon  .channel-label-line  { background: linear-gradient(90deg, #f59e0b 0%, #fde9c4 100%); }
+
     /* ── Amazon Listing ── */
     .amazon-card {
       background: white;
@@ -501,21 +527,96 @@
 <body>
 
 <header>
-  <h1>🌿 Plant Description Generator</h1>
-  <p>Enter a plant name — AI will write a complete Shopify product description</p>
+  <h1>🌿 Plant Listing Generator</h1>
+  <p>Generate complete product listings for Shopify &amp; Amazon — SEO titles, descriptions, pricing, and more</p>
 </header>
 
 <div class="page">
 
-  <!-- Input -->
-  <div class="input-card">
-    <input id="plantInput" type="text"
-           placeholder="e.g. Golden Pothos, Monstera Deliciosa, Aloe Vera, Bird of Paradise…" />
-    <button id="generateBtn" class="btn-primary" onclick="generate()">Generate</button>
-  </div>
+  <!-- ═══════════════════════════════════════
+       SHOPIFY CHANNEL
+  ════════════════════════════════════════ -->
+  <div class="channel-section channel-shopify">
+    <div class="channel-label">
+      <span class="channel-label-text">📦 Shopify Listing</span>
+      <span class="channel-label-line"></span>
+    </div>
 
-  <!-- ══ Pricing Calculator ══ -->
-  <div class="calc-card">
+    <!-- Input -->
+    <div class="input-card">
+      <input id="plantInput" type="text"
+             placeholder="e.g. Golden Pothos, Monstera Deliciosa, Aloe Vera, Bird of Paradise…" />
+      <button id="generateBtn" class="btn-primary" onclick="generate()">Generate</button>
+    </div>
+
+    <!-- Generating state -->
+    <div id="genCard" class="gen-card hidden">
+      <div class="gen-header">
+        <div class="spinner"></div>
+        <div class="gen-label">Generating description for <span id="genPlantName"></span>…</div>
+      </div>
+      <div id="streamBox" class="stream-box"></div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorCard" class="error-card hidden">
+      <strong>Error:</strong> <span id="errorMsg"></span>
+    </div>
+
+    <!-- SEO card: Title + Meta -->
+    <div id="seoCard" class="seo-card hidden">
+      <div class="seo-card-header">🔍 SEO Title &amp; Meta Description</div>
+      <div class="seo-fields">
+
+        <div class="seo-field">
+          <label>
+            Title
+            <span class="char-count" id="titleCount">0 chars</span>
+          </label>
+          <div class="seo-value" id="titleValue"></div>
+          <div class="seo-field-actions">
+            <button class="btn-copy" id="copyTitleBtn" onclick="copyField('titleValue','copyTitleBtn')">Copy Title</button>
+          </div>
+        </div>
+
+        <div class="seo-field">
+          <label>
+            Meta Description
+            <span class="char-count" id="metaCount">0 chars</span>
+          </label>
+          <div class="seo-value" id="metaValue"></div>
+          <div class="seo-field-actions">
+            <button class="btn-copy" id="copyMetaBtn" onclick="copyField('metaValue','copyMetaBtn')">Copy Meta</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Shopify tabs result -->
+    <div id="resultCard" class="result-card hidden">
+      <div class="result-header">
+        <div class="result-title" id="resultTitle"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="view-toggle">
+            <button class="btn-toggle active" onclick="switchView('preview', this)">Preview</button>
+            <button class="btn-toggle" onclick="switchView('code', this)">HTML Code</button>
+          </div>
+          <button class="btn-copy" id="copyBtn" onclick="copyHTML()">Copy HTML</button>
+        </div>
+      </div>
+
+      <div id="previewPanel" class="preview-panel">
+        <div id="previewContent"></div>
+      </div>
+
+      <div id="codePanel" class="code-panel hidden">
+        <pre id="codeContent"></pre>
+      </div>
+    </div>
+
+    <!-- ══ Pricing Calculator ══ -->
+    <div class="calc-card">
     <div class="calc-header">💰 Variant SKU &amp; Price Calculator</div>
     <div class="calc-body">
 
@@ -557,165 +658,110 @@
   </div>
   <!-- ══ End Pricing Calculator ══ -->
 
-  <!-- ══ Amazon Listing ══ -->
-  <div class="amazon-card">
-    <div class="amazon-header">🛒 Amazon Listing Optimizer</div>
-    <div class="amazon-body">
+  </div><!-- /channel-section channel-shopify -->
 
-      <div class="amazon-inputs">
-        <div class="amazon-field">
-          <label>Plant Name</label>
-          <input id="amzPlantName" type="text" placeholder="e.g. String of Pearls" />
-        </div>
-        <div class="amazon-field">
-          <label>Pot Size</label>
-          <select id="amzPotSize">
-            <option value="2">2 inch</option>
-            <option value="4">4 inch</option>
-          </select>
-        </div>
-        <div class="amazon-field">
-          <label>&nbsp;</label>
-          <button class="btn-amazon" id="amzGenBtn" onclick="generateAmazon()">Generate Amazon Listing</button>
-        </div>
-      </div>
-      <div style="margin-top:8px">
-        <button class="btn-copy" onclick="amzSyncName()" style="font-size:.82rem">↑ Use plant name from above</button>
-      </div>
-
-      <!-- Stream preview -->
-      <div id="amzGenCard" class="gen-card hidden" style="margin-top:14px">
-        <div class="gen-header">
-          <div class="spinner"></div>
-          <div class="gen-label">Generating Amazon listing…</div>
-        </div>
-        <div id="amzStreamBox" class="amazon-stream-box"></div>
-      </div>
-
-      <!-- Error -->
-      <div id="amzError" class="error-card hidden" style="margin-top:14px"></div>
-
-      <!-- Results -->
-      <div id="amzResults" class="hidden">
-
-        <!-- Product Name -->
-        <div class="amazon-section">
-          <div class="amazon-section-header">
-            <span class="amazon-section-title">Product Name</span>
-            <span class="amazon-section-meta" id="amzNameCount"></span>
-          </div>
-          <div class="amazon-content" id="amzProductName"></div>
-          <div class="amazon-section-actions">
-            <button class="btn-copy" id="amzCopyName" onclick="amzCopy('amzProductName','amzCopyName')">Copy</button>
-          </div>
-        </div>
-
-        <!-- Bullet Points -->
-        <div class="amazon-section" style="margin-top:12px">
-          <div class="amazon-section-header">
-            <span class="amazon-section-title">Bullet Points (5)</span>
-            <span class="amazon-section-meta" id="amzBulletsCount"></span>
-          </div>
-          <ul class="amazon-bullets-list" id="amzBulletsList"></ul>
-          <div class="amazon-section-actions">
-            <button class="btn-copy" id="amzCopyBullets" onclick="amzCopyBullets()">Copy All Bullets</button>
-          </div>
-        </div>
-
-        <!-- Description -->
-        <div class="amazon-section" style="margin-top:12px">
-          <div class="amazon-section-header">
-            <span class="amazon-section-title">Description</span>
-            <span class="amazon-section-meta" id="amzDescCount"></span>
-          </div>
-          <div class="amazon-content" id="amzDescription"></div>
-          <div class="amazon-section-actions">
-            <button class="btn-copy" id="amzCopyDesc" onclick="amzCopy('amzDescription','amzCopyDesc')">Copy</button>
-          </div>
-        </div>
-
-        <!-- Backend Keywords -->
-        <div class="amazon-section" style="margin-top:12px">
-          <div class="amazon-section-header">
-            <span class="amazon-section-title">Backend Keywords (Search Terms)</span>
-            <span class="amazon-section-meta" id="amzKwCount"></span>
-          </div>
-          <div class="amazon-content" id="amzKeywords"></div>
-          <div class="amazon-section-actions">
-            <button class="btn-copy" id="amzCopyKw" onclick="amzCopy('amzKeywords','amzCopyKw')">Copy</button>
-          </div>
-        </div>
-
-      </div><!-- /amzResults -->
-    </div>
-  </div>
-  <!-- ══ End Amazon Listing ══ -->
-
-  <!-- Generating state -->
-  <div id="genCard" class="gen-card hidden">
-    <div class="gen-header">
-      <div class="spinner"></div>
-      <div class="gen-label">Generating description for <span id="genPlantName"></span>…</div>
-    </div>
-    <div id="streamBox" class="stream-box"></div>
-  </div>
-
-  <!-- Error -->
-  <div id="errorCard" class="error-card hidden">
-    <strong>Error:</strong> <span id="errorMsg"></span>
-  </div>
-
-  <!-- SEO card: Title + Meta -->
-  <div id="seoCard" class="seo-card hidden">
-    <div class="seo-card-header">SEO Title &amp; Meta Description</div>
-    <div class="seo-fields">
-
-      <div class="seo-field">
-        <label>
-          Title
-          <span class="char-count" id="titleCount">0 chars</span>
-        </label>
-        <div class="seo-value" id="titleValue"></div>
-        <div class="seo-field-actions">
-          <button class="btn-copy" id="copyTitleBtn" onclick="copyField('titleValue','copyTitleBtn')">Copy Title</button>
-        </div>
-      </div>
-
-      <div class="seo-field">
-        <label>
-          Meta Description
-          <span class="char-count" id="metaCount">0 chars</span>
-        </label>
-        <div class="seo-value" id="metaValue"></div>
-        <div class="seo-field-actions">
-          <button class="btn-copy" id="copyMetaBtn" onclick="copyField('metaValue','copyMetaBtn')">Copy Meta</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Result -->
-  <div id="resultCard" class="result-card hidden">
-    <div class="result-header">
-      <div class="result-title" id="resultTitle"></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <div class="view-toggle">
-          <button class="btn-toggle active" onclick="switchView('preview', this)">Preview</button>
-          <button class="btn-toggle" onclick="switchView('code', this)">HTML Code</button>
-        </div>
-        <button class="btn-copy" id="copyBtn" onclick="copyHTML()">Copy HTML</button>
-      </div>
+  <!-- ═══════════════════════════════════════
+       AMAZON CHANNEL
+  ════════════════════════════════════════ -->
+  <div class="channel-section channel-amazon">
+    <div class="channel-label">
+      <span class="channel-label-text">🛒 Amazon Listing</span>
+      <span class="channel-label-line"></span>
     </div>
 
-    <div id="previewPanel" class="preview-panel">
-      <div id="previewContent"></div>
-    </div>
+    <div class="amazon-card">
+      <div class="amazon-header">Amazon Listing Optimizer</div>
+      <div class="amazon-body">
 
-    <div id="codePanel" class="code-panel hidden">
-      <pre id="codeContent"></pre>
-    </div>
-  </div>
+        <div class="amazon-inputs">
+          <div class="amazon-field">
+            <label>Plant Name</label>
+            <input id="amzPlantName" type="text" placeholder="e.g. String of Pearls" />
+          </div>
+          <div class="amazon-field">
+            <label>Pot Size</label>
+            <select id="amzPotSize">
+              <option value="2">2 inch</option>
+              <option value="4">4 inch</option>
+            </select>
+          </div>
+          <div class="amazon-field">
+            <label>&nbsp;</label>
+            <button class="btn-amazon" id="amzGenBtn" onclick="generateAmazon()">Generate Amazon Listing</button>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn-copy" onclick="amzSyncName()" style="font-size:.82rem">↑ Use plant name from above</button>
+        </div>
+
+        <!-- Stream preview -->
+        <div id="amzGenCard" class="gen-card hidden" style="margin-top:14px">
+          <div class="gen-header">
+            <div class="spinner"></div>
+            <div class="gen-label">Generating Amazon listing…</div>
+          </div>
+          <div id="amzStreamBox" class="amazon-stream-box"></div>
+        </div>
+
+        <!-- Error -->
+        <div id="amzError" class="error-card hidden" style="margin-top:14px"></div>
+
+        <!-- Results -->
+        <div id="amzResults" class="hidden">
+
+          <!-- Product Name -->
+          <div class="amazon-section">
+            <div class="amazon-section-header">
+              <span class="amazon-section-title">Product Name</span>
+              <span class="amazon-section-meta" id="amzNameCount"></span>
+            </div>
+            <div class="amazon-content" id="amzProductName"></div>
+            <div class="amazon-section-actions">
+              <button class="btn-copy" id="amzCopyName" onclick="amzCopy('amzProductName','amzCopyName')">Copy</button>
+            </div>
+          </div>
+
+          <!-- Bullet Points -->
+          <div class="amazon-section" style="margin-top:12px">
+            <div class="amazon-section-header">
+              <span class="amazon-section-title">Bullet Points (5)</span>
+              <span class="amazon-section-meta" id="amzBulletsCount"></span>
+            </div>
+            <ul class="amazon-bullets-list" id="amzBulletsList"></ul>
+            <div class="amazon-section-actions">
+              <button class="btn-copy" id="amzCopyBullets" onclick="amzCopyBullets()">Copy All Bullets</button>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="amazon-section" style="margin-top:12px">
+            <div class="amazon-section-header">
+              <span class="amazon-section-title">Description</span>
+              <span class="amazon-section-meta" id="amzDescCount"></span>
+            </div>
+            <div class="amazon-content" id="amzDescription"></div>
+            <div class="amazon-section-actions">
+              <button class="btn-copy" id="amzCopyDesc" onclick="amzCopy('amzDescription','amzCopyDesc')">Copy</button>
+            </div>
+          </div>
+
+          <!-- Backend Keywords -->
+          <div class="amazon-section" style="margin-top:12px">
+            <div class="amazon-section-header">
+              <span class="amazon-section-title">Backend Keywords (Search Terms)</span>
+              <span class="amazon-section-meta" id="amzKwCount"></span>
+            </div>
+            <div class="amazon-content" id="amzKeywords"></div>
+            <div class="amazon-section-actions">
+              <button class="btn-copy" id="amzCopyKw" onclick="amzCopy('amzKeywords','amzCopyKw')">Copy</button>
+            </div>
+          </div>
+
+        </div><!-- /amzResults -->
+      </div>
+    </div><!-- /amazon-card -->
+
+  </div><!-- /channel-section channel-amazon -->
 
 </div><!-- /page -->
 
