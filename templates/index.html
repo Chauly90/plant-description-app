@@ -269,6 +269,139 @@
 
     .hidden { display: none !important; }
 
+    /* ── Amazon Listing ── */
+    .amazon-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 28px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .amazon-header {
+      background: #fff8f0;
+      padding: 14px 20px;
+      border-bottom: 1px solid #f5d0a0;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #b45309;
+    }
+    .amazon-body { padding: 20px; }
+    .amazon-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    @media (max-width: 600px) { .amazon-inputs { grid-template-columns: 1fr; } }
+    .amazon-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .amazon-field input, .amazon-field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 2px solid #f5d0a0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .amazon-field input:focus, .amazon-field select:focus { border-color: #f59e0b; }
+    .btn-amazon {
+      padding: 11px 22px;
+      background: #f59e0b;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, opacity .2s;
+    }
+    .btn-amazon:hover:not(:disabled) { background: #d97706; }
+    .btn-amazon:disabled { opacity: .55; cursor: not-allowed; }
+    .amazon-section {
+      margin-top: 20px;
+      border: 1px solid #f5d0a0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .amazon-section-header {
+      background: #fff8f0;
+      padding: 9px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f5d0a0;
+    }
+    .amazon-section-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #b45309;
+    }
+    .amazon-section-meta {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .amazon-section-meta.ok   { color: #16a34a; }
+    .amazon-section-meta.warn { color: #d97706; }
+    .amazon-content {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 40px;
+    }
+    .amazon-bullets-list {
+      padding: 14px 16px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .amazon-bullet-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      background: #fafffe;
+      border: 1px solid #f0f0f0;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: #1a1a1a;
+    }
+    .bullet-num {
+      font-weight: 700;
+      color: #f59e0b;
+      font-size: 0.8rem;
+      min-width: 18px;
+      margin-top: 2px;
+    }
+    .bullet-text { flex: 1; }
+    .amazon-section-actions {
+      padding: 8px 14px 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .amazon-stream-box {
+      padding: 10px 16px;
+      font-family: "Menlo","Consolas",monospace;
+      font-size: 0.75rem;
+      color: #555;
+      max-height: 100px;
+      overflow-y: auto;
+      background: #fafffe;
+      white-space: pre-wrap;
+    }
+
     /* ── Pricing Calculator ── */
     .calc-card {
       background: white;
@@ -423,6 +556,100 @@
     </div>
   </div>
   <!-- ══ End Pricing Calculator ══ -->
+
+  <!-- ══ Amazon Listing ══ -->
+  <div class="amazon-card">
+    <div class="amazon-header">🛒 Amazon Listing Optimizer</div>
+    <div class="amazon-body">
+
+      <div class="amazon-inputs">
+        <div class="amazon-field">
+          <label>Plant Name</label>
+          <input id="amzPlantName" type="text" placeholder="e.g. String of Pearls" />
+        </div>
+        <div class="amazon-field">
+          <label>Pot Size</label>
+          <select id="amzPotSize">
+            <option value="2">2 inch</option>
+            <option value="4">4 inch</option>
+          </select>
+        </div>
+        <div class="amazon-field">
+          <label>&nbsp;</label>
+          <button class="btn-amazon" id="amzGenBtn" onclick="generateAmazon()">Generate Amazon Listing</button>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn-copy" onclick="amzSyncName()" style="font-size:.82rem">↑ Use plant name from above</button>
+      </div>
+
+      <!-- Stream preview -->
+      <div id="amzGenCard" class="gen-card hidden" style="margin-top:14px">
+        <div class="gen-header">
+          <div class="spinner"></div>
+          <div class="gen-label">Generating Amazon listing…</div>
+        </div>
+        <div id="amzStreamBox" class="amazon-stream-box"></div>
+      </div>
+
+      <!-- Error -->
+      <div id="amzError" class="error-card hidden" style="margin-top:14px"></div>
+
+      <!-- Results -->
+      <div id="amzResults" class="hidden">
+
+        <!-- Product Name -->
+        <div class="amazon-section">
+          <div class="amazon-section-header">
+            <span class="amazon-section-title">Product Name</span>
+            <span class="amazon-section-meta" id="amzNameCount"></span>
+          </div>
+          <div class="amazon-content" id="amzProductName"></div>
+          <div class="amazon-section-actions">
+            <button class="btn-copy" id="amzCopyName" onclick="amzCopy('amzProductName','amzCopyName')">Copy</button>
+          </div>
+        </div>
+
+        <!-- Bullet Points -->
+        <div class="amazon-section" style="margin-top:12px">
+          <div class="amazon-section-header">
+            <span class="amazon-section-title">Bullet Points (5)</span>
+            <span class="amazon-section-meta" id="amzBulletsCount"></span>
+          </div>
+          <ul class="amazon-bullets-list" id="amzBulletsList"></ul>
+          <div class="amazon-section-actions">
+            <button class="btn-copy" id="amzCopyBullets" onclick="amzCopyBullets()">Copy All Bullets</button>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="amazon-section" style="margin-top:12px">
+          <div class="amazon-section-header">
+            <span class="amazon-section-title">Description</span>
+            <span class="amazon-section-meta" id="amzDescCount"></span>
+          </div>
+          <div class="amazon-content" id="amzDescription"></div>
+          <div class="amazon-section-actions">
+            <button class="btn-copy" id="amzCopyDesc" onclick="amzCopy('amzDescription','amzCopyDesc')">Copy</button>
+          </div>
+        </div>
+
+        <!-- Backend Keywords -->
+        <div class="amazon-section" style="margin-top:12px">
+          <div class="amazon-section-header">
+            <span class="amazon-section-title">Backend Keywords (Search Terms)</span>
+            <span class="amazon-section-meta" id="amzKwCount"></span>
+          </div>
+          <div class="amazon-content" id="amzKeywords"></div>
+          <div class="amazon-section-actions">
+            <button class="btn-copy" id="amzCopyKw" onclick="amzCopy('amzKeywords','amzCopyKw')">Copy</button>
+          </div>
+        </div>
+
+      </div><!-- /amzResults -->
+    </div>
+  </div>
+  <!-- ══ End Amazon Listing ══ -->
 
   <!-- Generating state -->
   <div id="genCard" class="gen-card hidden">
@@ -653,6 +880,144 @@
 
   function show(id) { document.getElementById(id).classList.remove("hidden"); }
   function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  /* ══ Amazon Listing ══ */
+  function amzSyncName() {
+    const v = document.getElementById("plantInput").value.trim();
+    if (v) document.getElementById("amzPlantName").value = v;
+  }
+
+  function amzCharMeta(elId, text, min, max, unit) {
+    const n = new TextEncoder().encode(text).length;
+    const el = document.getElementById(elId);
+    el.textContent = `${n} ${unit}`;
+    el.className = "amazon-section-meta " + (n <= max && n >= min ? "ok" : "warn");
+    return n;
+  }
+
+  async function generateAmazon() {
+    const plantName = document.getElementById("amzPlantName").value.trim();
+    if (!plantName) { alert("Please enter a plant name."); return; }
+    const potSize    = document.getElementById("amzPotSize").value;
+    const shopifyDesc = generatedHTML ? document.getElementById("codeContent").textContent : "";
+
+    hide("amzResults"); hide("amzError");
+    show("amzGenCard");
+    document.getElementById("amzStreamBox").textContent = "";
+    document.getElementById("amzGenBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate-amazon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName, pot_size: potSize, shopify_desc: shopifyDesc }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Server error" }));
+        throw new Error(err.error || "Server error");
+      }
+
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let gotResult = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          let evt;
+          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+          if (evt.type === "chunk") {
+            const box = document.getElementById("amzStreamBox");
+            box.textContent += evt.text;
+            box.scrollTop = box.scrollHeight;
+          } else if (evt.type === "done") {
+            displayAmazonResult(evt);
+            gotResult = true;
+          } else if (evt.type === "error") {
+            throw new Error(evt.message);
+          }
+        }
+      }
+      if (!gotResult) throw new Error("Could not parse Amazon listing. Please try again.");
+    } catch (err) {
+      document.getElementById("amzError").textContent = "Error: " + err.message;
+      show("amzError");
+    } finally {
+      hide("amzGenCard");
+      document.getElementById("amzGenBtn").disabled = false;
+    }
+  }
+
+  function displayAmazonResult(evt) {
+    // Product Name
+    document.getElementById("amzProductName").textContent = evt.product_name || "";
+    amzCharMeta("amzNameCount", evt.product_name || "", 80, 200, "chars");
+
+    // Bullets
+    const list = document.getElementById("amzBulletsList");
+    list.innerHTML = "";
+    const bullets = evt.bullets || [];
+    bullets.forEach((b, i) => {
+      const li = document.createElement("li");
+      li.className = "amazon-bullet-item";
+      li.innerHTML = `<span class="bullet-num">${i+1}.</span><span class="bullet-text">${escHtml(b)}</span>
+        <button class="btn-copy-sm" id="amzCopyB${i}" onclick="amzCopySingle(${i},'amzCopyB${i}')">Copy</button>`;
+      list.appendChild(li);
+    });
+    const totalBP = bullets.join(" ").length;
+    const bpMeta = document.getElementById("amzBulletsCount");
+    bpMeta.textContent = `${totalBP} chars total`;
+    bpMeta.className = "amazon-section-meta " + (totalBP <= 1000 ? "ok" : "warn");
+
+    // Description
+    document.getElementById("amzDescription").textContent = evt.description || "";
+    amzCharMeta("amzDescCount", evt.description || "", 100, 2000, "chars");
+
+    // Keywords
+    document.getElementById("amzKeywords").textContent = evt.keywords || "";
+    amzCharMeta("amzKwCount", evt.keywords || "", 10, 249, "bytes");
+
+    show("amzResults");
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function amzCopy(contentId, btnId) {
+    const text = document.getElementById(contentId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  function amzCopyBullets() {
+    const items = document.querySelectorAll("#amzBulletsList .bullet-text");
+    const text = Array.from(items).map(el => el.textContent).join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("amzCopyBullets");
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy All Bullets"; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  function amzCopySingle(i, btnId) {
+    const text = document.querySelectorAll("#amzBulletsList .bullet-text")[i].textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
 
   /* ══ Pricing Calculator ══ */
   const VARIANTS = {

@@ -223,6 +223,134 @@ def generate():
     )
 
 
+# ─────────────────────────────────────────────
+#  AMAZON LISTING GENERATOR
+# ─────────────────────────────────────────────
+
+AMAZON_SYSTEM_PROMPT = """You are an expert Amazon product listing writer for Succulents Box (succulentsbox.com). Write optimized, policy-compliant Amazon listings for live plants.
+
+AMAZON RULES — follow strictly:
+1. NO prohibited words: "best", "cheapest", "guarantee" (except "guaranteed healthy arrival"), no medical claims.
+2. NO special characters in Product Name: no asterisks, no emojis, no pipes (|) unless part of structure.
+3. NO em dashes (— or –). Use commas or hyphens.
+4. Bullet Point headers in ALL CAPS inside brackets e.g. [LIVE INDOOR PLANT].
+5. Bullet Points total must stay under 1,000 characters combined.
+6. Backend Keywords: space-separated only, no commas, max 249 bytes, NEVER repeat words already in Product Name or Bullet Points.
+7. Description max 2,000 characters.
+
+OUTPUT FORMAT — output ONLY the four sections below, starting with ===PRODUCT_NAME===:
+
+===PRODUCT_NAME===
+[Single line. Formula: Succulents Box + Common Name + Scientific Name (if popular) + Primary Benefit + Primary Use Case + Size/Pot Info + Guaranteed Healthy Arrival]
+
+===BULLET_POINTS===
+[HEADER 1] - Bullet 1 text (identity: plant name, size from bottom of pot, pot type/size)
+[HEADER 2] - Bullet 2 text (shipping & quality: hand-selected, packaging, arrives healthy)
+[HEADER 3] - Bullet 3 text (lifestyle benefits: air purification if true, stress relief, decor style)
+[HEADER 4] - Bullet 4 text (easy care: light needs, watering frequency, beginner-friendly)
+[HEADER 5] - Bullet 5 text (gifting: eco-friendly, unique living gift, better than flowers)
+
+===DESCRIPTION===
+[Structured paragraph: emotional hook + technical specs (scientific name, pot size in inches, soil mix) + care instructions (Light / Water / Temperature) + CTA "Add to cart"]
+
+===BACKEND_KEYWORDS===
+[Space-separated keywords not already in Product Name or Bullet Points. Max 249 bytes.]"""
+
+
+def build_amazon_prompt(plant_name: str, pot_size: str, shopify_desc: str = "") -> str:
+    size_label = "2-inch plant in a 2-inch square black grower pot" if pot_size == "2" else "4-inch plant in a 4-inch round black grower pot"
+    context = f"\n\nShopify description for reference (do NOT copy, use as plant knowledge):\n{shopify_desc[:800]}" if shopify_desc.strip() else ""
+    return f"""Plant: {plant_name}
+Size: {size_label}{context}
+
+Write the complete Amazon listing (Product Name, 5 Bullet Points, Description, Backend Keywords).
+- Product Name formula: Succulents Box [Common Name] ([Scientific Name if well-known]) - [Primary Benefit] - [Use Case] - [Size] Grower Pot - Guaranteed Healthy Arrival
+- 5 bullet points total under 1,000 characters, Feature-to-Benefit formula
+- Description: hook + specs + care guide (Light/Water/Temperature) + CTA
+- Backend Keywords: 249 bytes max, no repeats from title or bullets"""
+
+
+def parse_amazon(text: str) -> dict:
+    """Parse PRODUCT_NAME, BULLET_POINTS, DESCRIPTION, BACKEND_KEYWORDS from Claude output."""
+    def between(a, b):
+        m = re.search(rf"=+\s*{a}\s*=+\s*(.*?)\s*=+\s*{b}\s*=+", text, re.DOTALL)
+        return m.group(1).strip() if m else ""
+
+    def after(marker):
+        m = re.search(rf"=+\s*{marker}\s*=+\s*(.*)", text, re.DOTALL)
+        if not m:
+            return ""
+        return re.sub(r"\s*=+\s*$", "", m.group(1)).strip()
+
+    product_name = between("PRODUCT_NAME", "BULLET_POINTS")
+    bullets_raw  = between("BULLET_POINTS", "DESCRIPTION")
+    description  = between("DESCRIPTION", "BACKEND_KEYWORDS")
+    keywords     = after("BACKEND_KEYWORDS")
+
+    # Split bullet points into list
+    bullets = []
+    for line in bullets_raw.split("\n"):
+        line = line.strip()
+        if line and line.startswith("["):
+            bullets.append(line)
+    if not bullets:
+        # fallback: any non-empty line
+        bullets = [l.strip() for l in bullets_raw.split("\n") if l.strip()]
+
+    print(f"[AMAZON_PARSE_OK] name={len(product_name)} bullets={len(bullets)} desc={len(description)} kw={len(keywords)}", file=sys.stderr, flush=True)
+    return {
+        "product_name": product_name,
+        "bullets": bullets[:5],
+        "description": description,
+        "keywords": keywords,
+    }
+
+
+@app.route("/generate-amazon", methods=["POST"])
+def generate_amazon():
+    data = request.get_json() or {}
+    plant_name   = data.get("plant_name", "").strip()
+    pot_size     = data.get("pot_size", "2")
+    shopify_desc = data.get("shopify_desc", "")
+
+    if not plant_name:
+        return jsonify({"error": "Plant name is required"}), 400
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return jsonify({"error": "ANTHROPIC_API_KEY not set"}), 500
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    def event_stream():
+        try:
+            yield ": ping\n\n"
+            full_text = ""
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=2048,
+                system=[{"type": "text", "text": AMAZON_SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+                messages=[{"role": "user", "content": build_amazon_prompt(plant_name, pot_size, shopify_desc)}],
+            ) as stream:
+                for chunk in stream.text_stream:
+                    full_text += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': chunk})}\n\n"
+
+            result = parse_amazon(full_text)
+            yield f"data: {json.dumps({'type': 'done', **result})}\n\n"
+
+        except anthropic.APIError as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Unexpected error: {str(e)}'})}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        content_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"},
+    )
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
