@@ -352,6 +352,130 @@ def generate_amazon():
     )
 
 
+# ─────────────────────────────────────────────
+#  ETSY LISTING GENERATOR
+# ─────────────────────────────────────────────
+
+ETSY_SYSTEM_PROMPT = """You are an expert Etsy product listing writer for Succulents Box (succulentsbox.com). Write optimized, high-converting Etsy listings for live plants.
+
+ETSY RULES — follow strictly:
+1. NO em dashes (— or –). Use commas or hyphens only.
+2. No medical claims. Soft pet/child safety language.
+3. No keyword stuffing. Natural, readable language.
+
+TITLE rules:
+- Total 140-155 characters (count carefully — must be at least 140)
+- Plant name MUST appear in the first 30-40 characters
+- Separate keyword clusters with " | " or ", "
+- Include: plant type (succulent/houseplant), size, use case (gift/indoor decor), and 1-2 style descriptors (minimalist, boho, aesthetic, rare, trailing, etc.)
+
+DESCRIPTION rules:
+- English only. Short sentences. One blank line between every section for mobile readability.
+- Hook (2 sentences): emotional pull or problem-solution. Make the reader feel something.
+- What You'll Receive: bullet list with • symbol, covering plant name, size from base of pot, pot type and size
+- Care Guide: 3 bullets (• Light / • Water / • Temperature), very brief
+- Why You'll Love It: 2-3 sentences — lifestyle benefits, gifting angle, or aesthetic value specific to THIS plant
+- CTA: 1-2 lines. Encourage saving the shop or messaging with questions.
+- Use "•" for all bullets. Keep total under 1,500 characters.
+
+TAGS rules:
+- Exactly 13 tags. Each tag is a short phrase, max 20 characters (including spaces).
+- Mix of: plant name variants, long-tail gifting phrases (gift for her, plant lover gift), aesthetic styles (boho home decor, minimalist plant), and care type (easy care plant, low light plant).
+- Each tag uses only spaces between words — no hyphens, no commas within a tag.
+- Output as ONE line: comma-separated list of 13 tags.
+
+OUTPUT FORMAT — output ONLY the three sections below, starting with ===ETSY_TITLE===:
+
+===ETSY_TITLE===
+[single line title, 140-155 characters]
+
+===ETSY_DESCRIPTION===
+[full description with hook, bullets, care, benefits, CTA]
+
+===ETSY_TAGS===
+[tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13]"""
+
+
+def build_etsy_prompt(plant_name: str, pot_size: str, shopify_desc: str = "") -> str:
+    size_label = "2-inch plant in a 2-inch square black grower pot" if pot_size == "2" else "4-inch plant in a 4-inch round black grower pot"
+    context = f"\n\nShopify description for reference (do NOT copy, use as plant knowledge):\n{shopify_desc[:800]}" if shopify_desc.strip() else ""
+    return f"""Plant: {plant_name}
+Size: {size_label}{context}
+
+Write the complete Etsy listing (Title, Description, 13 Tags).
+- Title: "{plant_name}" must appear in the first 30-40 characters, total 140-155 chars, cluster keywords with | or ,
+- Description: hook + what you'll receive (bullets) + care guide (3 bullets) + why you'll love it + CTA, mobile-friendly spacing, under 1,500 chars
+- Tags: exactly 13 tags, each max 20 characters, mix of long-tail, gifting, aesthetic, and care keywords"""
+
+
+def parse_etsy(text: str) -> dict:
+    """Parse ETSY_TITLE, ETSY_DESCRIPTION, ETSY_TAGS from Claude output."""
+    def between(a, b):
+        m = re.search(rf"=+\s*{a}\s*=+\s*(.*?)\s*=+\s*{b}\s*=+", text, re.DOTALL)
+        return m.group(1).strip() if m else ""
+
+    def after(marker):
+        m = re.search(rf"=+\s*{marker}\s*=+\s*(.*)", text, re.DOTALL)
+        if not m:
+            return ""
+        return re.sub(r"\s*=+\s*$", "", m.group(1)).strip()
+
+    title       = between("ETSY_TITLE", "ETSY_DESCRIPTION")
+    description = between("ETSY_DESCRIPTION", "ETSY_TAGS")
+    tags_raw    = after("ETSY_TAGS")
+
+    # Parse comma-separated tags, strip whitespace, max 13
+    tags = [t.strip() for t in tags_raw.split(",") if t.strip()][:13]
+
+    print(f"[ETSY_PARSE_OK] title={len(title)} desc={len(description)} tags={len(tags)}", file=sys.stderr, flush=True)
+    return {"title": title, "description": description, "tags": tags}
+
+
+@app.route("/generate-etsy", methods=["POST"])
+def generate_etsy():
+    data = request.get_json() or {}
+    plant_name   = data.get("plant_name", "").strip()
+    pot_size     = data.get("pot_size", "2")
+    shopify_desc = data.get("shopify_desc", "")
+
+    if not plant_name:
+        return jsonify({"error": "Plant name is required"}), 400
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return jsonify({"error": "ANTHROPIC_API_KEY not set"}), 500
+
+    client = anthropic.Anthropic(api_key=api_key)
+
+    def event_stream():
+        try:
+            yield ": ping\n\n"
+            full_text = ""
+            with client.messages.stream(
+                model="claude-sonnet-4-6",
+                max_tokens=2048,
+                system=[{"type": "text", "text": ETSY_SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+                messages=[{"role": "user", "content": build_etsy_prompt(plant_name, pot_size, shopify_desc)}],
+            ) as stream:
+                for chunk in stream.text_stream:
+                    full_text += chunk
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': chunk})}\n\n"
+
+            result = parse_etsy(full_text)
+            yield f"data: {json.dumps({'type': 'done', **result})}\n\n"
+
+        except anthropic.APIError as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'message': f'Unexpected error: {str(e)}'})}\n\n"
+
+    return Response(
+        stream_with_context(event_stream()),
+        content_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", "Connection": "keep-alive"},
+    )
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)

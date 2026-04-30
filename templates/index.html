@@ -522,6 +522,153 @@
       margin-top: 16px;
       flex-wrap: wrap;
     }
+
+    /* ── Etsy channel label ── */
+    .channel-etsy .channel-label-text { color: #6d28d9; }
+    .channel-etsy .channel-label-line  { background: linear-gradient(90deg, #7c3aed 0%, #ede9fe 100%); }
+
+    /* ── Etsy card ── */
+    .etsy-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .etsy-header {
+      background: #faf5ff;
+      padding: 14px 20px;
+      border-bottom: 1px solid #ddd6fe;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #6d28d9;
+    }
+    .etsy-body { padding: 20px; }
+    .etsy-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+    }
+    @media (max-width: 600px) { .etsy-inputs { grid-template-columns: 1fr; } }
+    .etsy-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .etsy-field input, .etsy-field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 2px solid #ddd6fe;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .etsy-field input:focus, .etsy-field select:focus { border-color: #7c3aed; }
+    .btn-etsy {
+      padding: 11px 22px;
+      background: #7c3aed;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, opacity .2s;
+    }
+    .btn-etsy:hover:not(:disabled) { background: #6d28d9; }
+    .btn-etsy:disabled { opacity: .55; cursor: not-allowed; }
+    .etsy-section {
+      margin-top: 20px;
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .etsy-section-header {
+      background: #faf5ff;
+      padding: 9px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #ddd6fe;
+    }
+    .etsy-section-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #6d28d9;
+    }
+    .etsy-section-meta {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    .etsy-section-meta.ok   { color: #16a34a; }
+    .etsy-section-meta.warn { color: #d97706; }
+    .etsy-content {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: #1a1a1a;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 40px;
+    }
+    .etsy-section-actions {
+      padding: 8px 14px 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    /* Tags grid */
+    .etsy-tags-grid {
+      padding: 12px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .etsy-tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #ede9fe;
+      border: 1px solid #c4b5fd;
+      border-radius: 20px;
+      padding: 4px 12px 4px 10px;
+      font-size: 0.82rem;
+      color: #4c1d95;
+      font-weight: 500;
+    }
+    .etsy-tag-num {
+      font-size: 0.72rem;
+      color: #7c3aed;
+      font-weight: 700;
+      min-width: 14px;
+    }
+    .btn-copy-tag {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: #7c3aed;
+      font-size: 0.75rem;
+      opacity: 0.6;
+      transition: opacity .15s;
+      margin-left: 2px;
+    }
+    .btn-copy-tag:hover { opacity: 1; }
+    .btn-copy-tag.copied { color: #16a34a; opacity: 1; }
+    .etsy-stream-box {
+      padding: 10px 16px;
+      font-family: "Menlo","Consolas",monospace;
+      font-size: 0.75rem;
+      color: #555;
+      max-height: 100px;
+      overflow-y: auto;
+      background: #faf5ff;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -762,6 +909,97 @@
     </div><!-- /amazon-card -->
 
   </div><!-- /channel-section channel-amazon -->
+
+  <!-- ═══════════════════════════════════════
+       ETSY CHANNEL
+  ════════════════════════════════════════ -->
+  <div class="channel-section channel-etsy">
+    <div class="channel-label">
+      <span class="channel-label-text">🛍️ Etsy Listing</span>
+      <span class="channel-label-line"></span>
+    </div>
+
+    <div class="etsy-card">
+      <div class="etsy-header">Etsy Listing Optimizer</div>
+      <div class="etsy-body">
+
+        <div class="etsy-inputs">
+          <div class="etsy-field">
+            <label>Plant Name</label>
+            <input id="etsyPlantName" type="text" placeholder="e.g. String of Pearls" />
+          </div>
+          <div class="etsy-field">
+            <label>Pot Size</label>
+            <select id="etsyPotSize">
+              <option value="2">2 inch</option>
+              <option value="4">4 inch</option>
+            </select>
+          </div>
+          <div class="etsy-field">
+            <label>&nbsp;</label>
+            <button class="btn-etsy" id="etsyGenBtn" onclick="generateEtsy()">Generate Etsy Listing</button>
+          </div>
+        </div>
+        <div style="margin-top:8px">
+          <button class="btn-copy" onclick="etsySyncName()" style="font-size:.82rem">↑ Use plant name from above</button>
+        </div>
+
+        <!-- Stream preview -->
+        <div id="etsyGenCard" class="gen-card hidden" style="margin-top:14px">
+          <div class="gen-header">
+            <div class="spinner"></div>
+            <div class="gen-label">Generating Etsy listing…</div>
+          </div>
+          <div id="etsyStreamBox" class="etsy-stream-box"></div>
+        </div>
+
+        <!-- Error -->
+        <div id="etsyError" class="error-card hidden" style="margin-top:14px"></div>
+
+        <!-- Results -->
+        <div id="etsyResults" class="hidden">
+
+          <!-- Title -->
+          <div class="etsy-section">
+            <div class="etsy-section-header">
+              <span class="etsy-section-title">Title</span>
+              <span class="etsy-section-meta" id="etsyTitleCount"></span>
+            </div>
+            <div class="etsy-content" id="etsyTitle"></div>
+            <div class="etsy-section-actions">
+              <button class="btn-copy" id="etsyCopyTitle" onclick="etsyCopy('etsyTitle','etsyCopyTitle')">Copy</button>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="etsy-section" style="margin-top:12px">
+            <div class="etsy-section-header">
+              <span class="etsy-section-title">Description</span>
+              <span class="etsy-section-meta" id="etsyDescCount"></span>
+            </div>
+            <div class="etsy-content" id="etsyDescription"></div>
+            <div class="etsy-section-actions">
+              <button class="btn-copy" id="etsyCopyDesc" onclick="etsyCopy('etsyDescription','etsyCopyDesc')">Copy</button>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="etsy-section" style="margin-top:12px">
+            <div class="etsy-section-header">
+              <span class="etsy-section-title">Tags (13)</span>
+              <span class="etsy-section-meta" id="etsyTagsCount"></span>
+            </div>
+            <div class="etsy-tags-grid" id="etsyTagsGrid"></div>
+            <div class="etsy-section-actions">
+              <button class="btn-copy" id="etsyCopyTags" onclick="etsyCopyAllTags()">Copy All Tags</button>
+            </div>
+          </div>
+
+        </div><!-- /etsyResults -->
+      </div>
+    </div><!-- /etsy-card -->
+
+  </div><!-- /channel-section channel-etsy -->
 
 </div><!-- /page -->
 
@@ -1142,6 +1380,146 @@
       const btn = event.target;
       btn.textContent = "Copied!";
       setTimeout(() => { btn.textContent = "Copy All (TSV)"; }, 2000);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  /* ══ Etsy Listing ══ */
+  function etsySyncName() {
+    const v = document.getElementById("plantInput").value.trim();
+    if (v) document.getElementById("etsyPlantName").value = v;
+  }
+
+  function etsyCharMeta(elId, text, min, max, unit, cssClass) {
+    const n = text.length;
+    const el = document.getElementById(elId);
+    el.textContent = `${n} ${unit}`;
+    el.className = (cssClass || "etsy-section-meta") + " " + (n >= min && n <= max ? "ok" : "warn");
+    return n;
+  }
+
+  async function generateEtsy() {
+    const plantName = document.getElementById("etsyPlantName").value.trim();
+    if (!plantName) { alert("Please enter a plant name."); return; }
+    const potSize     = document.getElementById("etsyPotSize").value;
+    const shopifyDesc = generatedHTML ? document.getElementById("codeContent").textContent : "";
+
+    hide("etsyResults"); hide("etsyError");
+    show("etsyGenCard");
+    document.getElementById("etsyStreamBox").textContent = "";
+    document.getElementById("etsyGenBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate-etsy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName, pot_size: potSize, shopify_desc: shopifyDesc }),
+      });
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Server error" }));
+        throw new Error(err.error || "Server error");
+      }
+
+      const reader  = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let gotResult = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          let evt;
+          try { evt = JSON.parse(line.slice(6)); } catch { continue; }
+          if (evt.type === "chunk") {
+            const box = document.getElementById("etsyStreamBox");
+            box.textContent += evt.text;
+            box.scrollTop = box.scrollHeight;
+          } else if (evt.type === "done") {
+            displayEtsyResult(evt);
+            gotResult = true;
+          } else if (evt.type === "error") {
+            throw new Error(evt.message);
+          }
+        }
+      }
+      if (!gotResult) throw new Error("Could not parse Etsy listing. Please try again.");
+    } catch (err) {
+      document.getElementById("etsyError").textContent = "Error: " + err.message;
+      show("etsyError");
+    } finally {
+      hide("etsyGenCard");
+      document.getElementById("etsyGenBtn").disabled = false;
+    }
+  }
+
+  function displayEtsyResult(evt) {
+    // Title
+    const title = evt.title || "";
+    document.getElementById("etsyTitle").textContent = title;
+    etsyCharMeta("etsyTitleCount", title, 140, 155, "chars", "etsy-section-meta");
+
+    // Description
+    const desc = evt.description || "";
+    document.getElementById("etsyDescription").textContent = desc;
+    etsyCharMeta("etsyDescCount", desc, 50, 1500, "chars", "etsy-section-meta");
+
+    // Tags
+    const tags = evt.tags || [];
+    const grid = document.getElementById("etsyTagsGrid");
+    grid.innerHTML = "";
+    tags.forEach((tag, i) => {
+      const chip = document.createElement("span");
+      chip.className = "etsy-tag-chip";
+      chip.innerHTML = `<span class="etsy-tag-num">${i+1}</span>${escHtml(tag)}<button class="btn-copy-tag" id="etsyTagBtn${i}" onclick="etsyCopyTag(${i},'etsyTagBtn${i}')">⎘</button>`;
+      grid.appendChild(chip);
+    });
+    const tagsMeta = document.getElementById("etsyTagsCount");
+    tagsMeta.textContent = `${tags.length} tags`;
+    tagsMeta.className = "etsy-section-meta " + (tags.length === 13 ? "ok" : "warn");
+
+    show("etsyResults");
+  }
+
+  function etsyCopy(contentId, btnId) {
+    const text = document.getElementById(contentId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  function etsyCopyAllTags() {
+    const chips = document.querySelectorAll("#etsyTagsGrid .etsy-tag-chip");
+    // Build comma-separated list, stripping the number and copy button text
+    const tags = Array.from(chips).map(chip => {
+      // textContent includes the num + tag text + button symbol — extract just the tag text
+      const num  = chip.querySelector(".etsy-tag-num").textContent;
+      const btn  = chip.querySelector(".btn-copy-tag").textContent;
+      return chip.textContent.replace(num, "").replace(btn, "").trim();
+    });
+    navigator.clipboard.writeText(tags.join(", ")).then(() => {
+      const btn = document.getElementById("etsyCopyTags");
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy All Tags"; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  function etsyCopyTag(i, btnId) {
+    const chips = document.querySelectorAll("#etsyTagsGrid .etsy-tag-chip");
+    const chip  = chips[i];
+    const num   = chip.querySelector(".etsy-tag-num").textContent;
+    const btn_  = chip.querySelector(".btn-copy-tag").textContent;
+    const text  = chip.textContent.replace(num, "").replace(btn_, "").trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "⎘"; btn.classList.remove("copied"); }, 1500);
     }).catch(() => alert("Could not copy."));
   }
 </script>
