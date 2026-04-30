@@ -248,7 +248,7 @@ OUTPUT FORMAT — output ONLY the four sections below, starting with ===PRODUCT_
 [HEADER 2] - Bullet 2 text (shipping & quality: hand-selected, packaging, arrives healthy)
 [HEADER 3] - Bullet 3 text (lifestyle benefits: air purification if true, stress relief, decor style)
 [HEADER 4] - Bullet 4 text (easy care: light needs, watering frequency, beginner-friendly)
-[HEADER 5] - Bullet 5 text (gifting: eco-friendly, unique living gift, better than flowers)
+[HEADER 5] - Bullet 5 text (gifting & DIY: connect THIS plant's specific visual trait or personality to a real gifting moment or DIY use — e.g. trailing plants → hanging basket gift, rosette succulents → terrarium or dish garden, air plants → driftwood/frame DIY, colorful foliage → housewarming statement piece. Be specific to the plant, never generic. Mention 1-2 real occasions.)
 
 ===DESCRIPTION===
 [Structured paragraph: emotional hook + technical specs (scientific name, pot size in inches, soil mix) + care instructions (Light / Water / Temperature) + CTA "Add to cart"]
@@ -266,6 +266,7 @@ Size: {size_label}{context}
 Write the complete Amazon listing (Product Name, 5 Bullet Points, Description, Backend Keywords).
 - Product Name formula: Succulents Box [Common Name] ([Scientific Name if well-known]) - [Primary Benefit] - [Use Case] - [Size] Grower Pot - Guaranteed Healthy Arrival
 - 5 bullet points total under 1,000 characters, Feature-to-Benefit formula
+- Bullet 5 MUST reference this specific plant's visual trait or personality (trailing, rosette, spiky, colorful, etc.) and connect it to a concrete gifting moment or DIY project — never write generic "perfect gift for any occasion" filler
 - Description: hook + specs + care guide (Light/Water/Temperature) + CTA
 - Backend Keywords: 249 bytes max, no repeats from title or bullets"""
 
