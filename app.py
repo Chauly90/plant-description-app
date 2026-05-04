@@ -257,17 +257,37 @@ OUTPUT FORMAT — output ONLY the four sections below, starting with ===PRODUCT_
 [Space-separated keywords not already in Product Name or Bullet Points. Max 249 bytes.]"""
 
 
-def build_amazon_prompt(plant_name: str, pot_size: str, shopify_desc: str = "") -> str:
-    size_label = "2-inch plant in a 2-inch square black grower pot" if pot_size == "2" else "4-inch plant in a 4-inch round black grower pot"
+SIZE_LABELS = {
+    "2":  "2-inch plant in a 2-inch square black grower pot",
+    "3":  "3-inch plant in a 3-inch round black grower pot",
+    "4":  "4-inch plant in a 4-inch round black grower pot",
+    "6":  "6-inch plant in a 6-inch round black grower pot",
+    "8":  "8-inch plant in a 8-inch round black grower pot",
+    "10": "10-inch plant in a 10-inch round black grower pot",
+}
+
+
+def build_amazon_prompt(plant_name: str, pot_sizes: list, shopify_desc: str = "") -> str:
+    if len(pot_sizes) == 1:
+        size_info = f"Size: {SIZE_LABELS.get(pot_sizes[0], pot_sizes[0] + '-inch plant')}"
+        size_note = ""
+    else:
+        size_list = ", ".join(f"{s}-inch" for s in pot_sizes)
+        size_info = f"Available sizes: {size_list}"
+        size_note = (
+            f"\nIMPORTANT: This listing covers ALL these sizes ({size_list}). "
+            "In the Product Name, represent the range (e.g. '2 to 6 Inch Grower Pot'). "
+            "In bullet 1, list all available sizes. In description, mention each size option."
+        )
     context = f"\n\nShopify description for reference (do NOT copy, use as plant knowledge):\n{shopify_desc[:800]}" if shopify_desc.strip() else ""
     return f"""Plant: {plant_name}
-Size: {size_label}{context}
+{size_info}{size_note}{context}
 
 Write the complete Amazon listing (Product Name, 5 Bullet Points, Description, Backend Keywords).
-- Product Name formula: Succulents Box [Common Name] ([Scientific Name if well-known]) - [Primary Benefit] - [Use Case] - [Size] Grower Pot - Guaranteed Healthy Arrival
+- Product Name formula: Succulents Box [Common Name] ([Scientific Name if well-known]) - [Primary Benefit] - [Use Case] - [Size info] Grower Pot - Guaranteed Healthy Arrival
 - 5 bullet points total under 1,000 characters, Feature-to-Benefit formula
-- Bullet 5 MUST reference this specific plant's visual trait or personality (trailing, rosette, spiky, colorful, etc.) and connect it to a concrete gifting moment or DIY project — never write generic "perfect gift for any occasion" filler
-- Description: hook + specs + care guide (Light/Water/Temperature) + CTA
+- Bullet 5 MUST reference this specific plant's visual trait or personality (trailing, rosette, spiky, colorful, etc.) and connect it to a concrete gifting moment or DIY project
+- Description: hook + specs (mention all sizes if multiple) + care guide (Light/Water/Temperature) + CTA
 - Backend Keywords: 249 bytes max, no repeats from title or bullets"""
 
 
@@ -311,11 +331,15 @@ def parse_amazon(text: str) -> dict:
 def generate_amazon():
     data = request.get_json() or {}
     plant_name   = data.get("plant_name", "").strip()
-    pot_size     = data.get("pot_size", "2")
+    pot_sizes    = data.get("pot_sizes", ["2"])   # list of size strings
+    if isinstance(pot_sizes, str):
+        pot_sizes = [pot_sizes]
     shopify_desc = data.get("shopify_desc", "")
 
     if not plant_name:
         return jsonify({"error": "Plant name is required"}), 400
+    if not pot_sizes:
+        return jsonify({"error": "Please select at least one size"}), 400
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
@@ -331,7 +355,7 @@ def generate_amazon():
                 model="claude-sonnet-4-6",
                 max_tokens=2048,
                 system=[{"type": "text", "text": AMAZON_SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-                messages=[{"role": "user", "content": build_amazon_prompt(plant_name, pot_size, shopify_desc)}],
+                messages=[{"role": "user", "content": build_amazon_prompt(plant_name, pot_sizes, shopify_desc)}],
             ) as stream:
                 for chunk in stream.text_stream:
                     full_text += chunk
@@ -396,15 +420,24 @@ OUTPUT FORMAT — output ONLY the three sections below, starting with ===ETSY_TI
 [tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11, tag12, tag13]"""
 
 
-def build_etsy_prompt(plant_name: str, pot_size: str, shopify_desc: str = "") -> str:
-    size_label = "2-inch plant in a 2-inch square black grower pot" if pot_size == "2" else "4-inch plant in a 4-inch round black grower pot"
+def build_etsy_prompt(plant_name: str, pot_sizes: list, shopify_desc: str = "") -> str:
+    if len(pot_sizes) == 1:
+        size_info = f"Size: {SIZE_LABELS.get(pot_sizes[0], pot_sizes[0] + '-inch plant')}"
+        size_note = ""
+    else:
+        size_list = ", ".join(f"{s}-inch" for s in pot_sizes)
+        size_info = f"Available sizes: {size_list}"
+        size_note = (
+            f"\nIMPORTANT: This listing covers ALL these sizes ({size_list}). "
+            "In the Title, represent the size range. In description's 'What You'll Receive', list all available sizes."
+        )
     context = f"\n\nShopify description for reference (do NOT copy, use as plant knowledge):\n{shopify_desc[:800]}" if shopify_desc.strip() else ""
     return f"""Plant: {plant_name}
-Size: {size_label}{context}
+{size_info}{size_note}{context}
 
 Write the complete Etsy listing (Title, Description, 13 Tags).
 - Title: "{plant_name}" must appear in the first 30-40 characters, total 140-155 chars, cluster keywords with | or ,
-- Description: hook + what you'll receive (bullets) + care guide (3 bullets) + why you'll love it + CTA, mobile-friendly spacing, under 1,500 chars
+- Description: hook + what you'll receive (bullets, list all sizes if multiple) + care guide (3 bullets) + why you'll love it + CTA, mobile-friendly spacing, under 1,500 chars
 - Tags: exactly 13 tags, each max 20 characters, mix of long-tail, gifting, aesthetic, and care keywords"""
 
 
@@ -435,7 +468,9 @@ def parse_etsy(text: str) -> dict:
 def generate_etsy():
     data = request.get_json() or {}
     plant_name   = data.get("plant_name", "").strip()
-    pot_size     = data.get("pot_size", "2")
+    pot_sizes    = data.get("pot_sizes", ["2"])
+    if isinstance(pot_sizes, str):
+        pot_sizes = [pot_sizes]
     shopify_desc = data.get("shopify_desc", "")
 
     if not plant_name:
@@ -455,7 +490,7 @@ def generate_etsy():
                 model="claude-sonnet-4-6",
                 max_tokens=2048,
                 system=[{"type": "text", "text": ETSY_SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-                messages=[{"role": "user", "content": build_etsy_prompt(plant_name, pot_size, shopify_desc)}],
+                messages=[{"role": "user", "content": build_etsy_prompt(plant_name, pot_sizes, shopify_desc)}],
             ) as stream:
                 for chunk in stream.text_stream:
                     full_text += chunk
