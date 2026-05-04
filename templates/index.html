@@ -1078,6 +1078,7 @@
           <div class="hp-calc-field">
             <label>Size</label>
             <select id="hpSize" onchange="hpCalcUpdate()">
+              <option value="2">2 inch</option>
               <option value="3">3 inch</option>
               <option value="4">4 inch</option>
               <option value="6">6 inch</option>
@@ -1630,6 +1631,7 @@
 
   /* ══ Houseplant Price Calculator ══ */
   const HP_FEES = {
+    "2":  { overhead: 17.00, shipping:  8.45 },
     "3":  { overhead: 17.00, shipping:  8.45 },
     "4":  { overhead: 17.00, shipping: 10.10 },
     "6":  { overhead: 23.00, shipping: 16.75 },
