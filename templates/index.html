@@ -523,6 +523,76 @@
       flex-wrap: wrap;
     }
 
+    /* ── Houseplant Price Calculator ── */
+    .hp-calc-card {
+      background: white;
+      border-radius: 12px;
+      margin-top: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .hp-calc-header {
+      background: #faf5ff;
+      padding: 14px 20px;
+      border-bottom: 1px solid #ddd6fe;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #6d28d9;
+    }
+    .hp-calc-body { padding: 20px; }
+    .hp-calc-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      align-items: end;
+    }
+    @media (max-width: 500px) { .hp-calc-inputs { grid-template-columns: 1fr; } }
+    .hp-calc-field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 5px;
+    }
+    .hp-calc-field input, .hp-calc-field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 2px solid #ddd6fe;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .hp-calc-field input:focus, .hp-calc-field select:focus { border-color: #7c3aed; }
+    .hp-result-box {
+      margin-top: 18px;
+      background: #faf5ff;
+      border: 1px solid #ddd6fe;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: none;
+    }
+    .hp-result-box.visible { display: block; }
+    .hp-result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 0.9rem;
+      color: #444;
+      border-bottom: 1px solid #ede9fe;
+    }
+    .hp-result-row:last-child { border-bottom: none; }
+    .hp-result-row.total {
+      margin-top: 4px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      color: #6d28d9;
+    }
+    .hp-result-label { color: #666; }
+    .hp-result-value { font-weight: 600; font-family: "Menlo","Consolas",monospace; }
+    .hp-result-row.total .hp-result-value { color: #6d28d9; font-size: 1.15rem; }
+
     /* ── Etsy channel label ── */
     .channel-etsy .channel-label-text { color: #6d28d9; }
     .channel-etsy .channel-label-line  { background: linear-gradient(90deg, #7c3aed 0%, #ede9fe 100%); }
@@ -998,6 +1068,51 @@
         </div><!-- /etsyResults -->
       </div>
     </div><!-- /etsy-card -->
+
+    <!-- ══ Houseplant Price Calculator ══ -->
+    <div class="hp-calc-card">
+      <div class="hp-calc-header">🏷️ Calculate Prices for Houseplants</div>
+      <div class="hp-calc-body">
+
+        <div class="hp-calc-inputs">
+          <div class="hp-calc-field">
+            <label>Size</label>
+            <select id="hpSize" onchange="hpCalcUpdate()">
+              <option value="3">3 inch</option>
+              <option value="4">4 inch</option>
+              <option value="6">6 inch</option>
+              <option value="8">8 inch</option>
+              <option value="10">10 inch</option>
+            </select>
+          </div>
+          <div class="hp-calc-field">
+            <label>Cost Per Item ($)</label>
+            <input id="hpCost" type="number" step="0.01" min="0" placeholder="e.g. 4.50" oninput="hpCalcUpdate()" />
+          </div>
+        </div>
+
+        <div id="hpResult" class="hp-result-box">
+          <div class="hp-result-row">
+            <span class="hp-result-label">Cost per item</span>
+            <span class="hp-result-value" id="hpRowCost">—</span>
+          </div>
+          <div class="hp-result-row">
+            <span class="hp-result-label">Overhead</span>
+            <span class="hp-result-value" id="hpRowOverhead">—</span>
+          </div>
+          <div class="hp-result-row">
+            <span class="hp-result-label">Shipping cost</span>
+            <span class="hp-result-value" id="hpRowShipping">—</span>
+          </div>
+          <div class="hp-result-row total">
+            <span>Total Price</span>
+            <span class="hp-result-value" id="hpRowTotal">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ══ End Houseplant Price Calculator ══ -->
 
   </div><!-- /channel-section channel-etsy -->
 
@@ -1508,6 +1623,36 @@
       btn.textContent = "✓ Copied!"; btn.classList.add("copied");
       setTimeout(() => { btn.textContent = "Copy All Tags"; btn.classList.remove("copied"); }, 1800);
     }).catch(() => alert("Could not copy."));
+  }
+
+  /* ══ Houseplant Price Calculator ══ */
+  const HP_FEES = {
+    "3":  { overhead: 17.00, shipping:  8.45 },
+    "4":  { overhead: 17.00, shipping: 10.10 },
+    "6":  { overhead: 23.00, shipping: 16.75 },
+    "8":  { overhead: 30.00, shipping: 27.20 },
+    "10": { overhead: 40.00, shipping: 32.50 },
+  };
+
+  function hpFmt(n) {
+    return "$" + n.toFixed(2);
+  }
+
+  function hpCalcUpdate() {
+    const size = document.getElementById("hpSize").value;
+    const cost = parseFloat(document.getElementById("hpCost").value);
+    const box  = document.getElementById("hpResult");
+
+    if (isNaN(cost) || cost < 0) { box.classList.remove("visible"); return; }
+
+    const { overhead, shipping } = HP_FEES[size];
+    const total = cost + overhead + shipping;
+
+    document.getElementById("hpRowCost").textContent     = hpFmt(cost);
+    document.getElementById("hpRowOverhead").textContent  = hpFmt(overhead);
+    document.getElementById("hpRowShipping").textContent  = hpFmt(shipping);
+    document.getElementById("hpRowTotal").textContent     = hpFmt(total);
+    box.classList.add("visible");
   }
 
   function etsyCopyTag(i, btnId) {
