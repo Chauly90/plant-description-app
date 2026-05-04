@@ -1106,7 +1106,10 @@
           </div>
           <div class="hp-result-row total">
             <span>Total Price</span>
-            <span class="hp-result-value" id="hpRowTotal">—</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="hp-result-value" id="hpRowTotal">—</span>
+              <button class="btn-copy-sm" id="hpCopyTotal" onclick="hpCopyTotal()">Copy</button>
+            </div>
           </div>
         </div>
 
@@ -1653,6 +1656,16 @@
     document.getElementById("hpRowShipping").textContent  = hpFmt(shipping);
     document.getElementById("hpRowTotal").textContent     = hpFmt(total);
     box.classList.add("visible");
+  }
+
+  function hpCopyTotal() {
+    const text = document.getElementById("hpRowTotal").textContent;
+    if (text === "—") return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("hpCopyTotal");
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
   }
 
   function etsyCopyTag(i, btnId) {
