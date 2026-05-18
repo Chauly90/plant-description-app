@@ -1,7 +1,11 @@
+import csv
+import io
 import json
 import os
 import re
 import sys
+import time
+import urllib.request
 from flask import Flask, request, jsonify, render_template, Response, stream_with_context
 import anthropic
 from dotenv import load_dotenv
@@ -9,6 +13,130 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
+# ─────────────────────────────────────────────
+#  KEYWORD ENGINE  (Google Search Console + Ubersuggest)
+# ─────────────────────────────────────────────
+
+_GSC_URL  = "https://docs.google.com/spreadsheets/d/1vkFJ2jeJRPVkzYvNeatrx2BskUIDjrMdmPjtkQHSYxE/export?format=csv&gid=2135342619"
+_UBER_URL = "https://docs.google.com/spreadsheets/d/1vkFJ2jeJRPVkzYvNeatrx2BskUIDjrMdmPjtkQHSYxE/export?format=csv&gid=1941367263"
+_kw_cache: dict = {}
+_kw_cache_time: float = 0.0
+_KW_TTL = 3600  # refresh every hour
+
+
+def _fetch_csv(url: str) -> list[dict]:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        content = resp.read().decode("utf-8-sig")
+    return list(csv.DictReader(io.StringIO(content)))
+
+
+def _load_keywords() -> dict:
+    global _kw_cache, _kw_cache_time
+    if _kw_cache and (time.time() - _kw_cache_time) < _KW_TTL:
+        return _kw_cache
+    gsc, uber = [], []
+    try:
+        gsc  = _fetch_csv(_GSC_URL)
+        print(f"[KW] GSC loaded: {len(gsc)} rows", file=sys.stderr, flush=True)
+    except Exception as e:
+        print(f"[KW] GSC fetch error: {e}", file=sys.stderr, flush=True)
+    try:
+        uber = _fetch_csv(_UBER_URL)
+        print(f"[KW] Uber loaded: {len(uber)} rows", file=sys.stderr, flush=True)
+    except Exception as e:
+        print(f"[KW] Uber fetch error: {e}", file=sys.stderr, flush=True)
+    _kw_cache = {"gsc": gsc, "uber": uber}
+    _kw_cache_time = time.time()
+    return _kw_cache
+
+
+def _plant_keywords_context(plant_name: str) -> str:
+    """Return a keyword context block to inject into the Shopify prompt."""
+    try:
+        data = _load_keywords()
+    except Exception:
+        return ""
+
+    plant_lower = plant_name.lower()
+    # meaningful words (≥4 chars) from plant name for fuzzy matching
+    plant_words = [w for w in plant_lower.split() if len(w) >= 4]
+
+    def kw_matches(kw_text: str) -> bool:
+        t = kw_text.lower()
+        return plant_lower in t or any(w in t for w in plant_words)
+
+    # ── GSC ──
+    gsc_hits = []
+    for row in data.get("gsc", []):
+        kw       = row.get("Top queries", "").strip()
+        plant_col = row.get("Plant Name", "").strip().lower()
+        # match by keyword text OR Plant Name column
+        if not kw:
+            continue
+        matched = kw_matches(kw) or (plant_lower in plant_col or
+                  any(w in plant_col for w in plant_words))
+        if not matched:
+            continue
+        try:
+            clicks   = int(row.get("Clicks", 0) or 0)
+            position = float(row.get("Position", 99) or 99)
+            impr     = int(row.get("Impressions", 0) or 0)
+            score    = clicks * (20.0 / max(position, 0.5))
+            gsc_hits.append({"kw": kw, "clicks": clicks,
+                              "impressions": impr, "position": round(position, 1),
+                              "score": score})
+        except Exception:
+            pass
+    gsc_hits.sort(key=lambda x: -x["score"])
+
+    # ── Ubersuggest ──
+    uber_hits = []
+    for row in data.get("uber", []):
+        kw = row.get("Keywords", "").strip()
+        if not kw or not kw_matches(kw):
+            continue
+        try:
+            volume = int(row.get("Volume", 0) or 0)
+            diff   = int(row.get("Seo Difficulty", 99) or 99)
+            score  = volume / max(diff, 1)
+            uber_hits.append({"kw": kw, "volume": volume,
+                               "difficulty": diff, "score": score})
+        except Exception:
+            pass
+    uber_hits.sort(key=lambda x: -x["score"])
+
+    if not gsc_hits and not uber_hits:
+        return ""
+
+    lines = ["SEO KEYWORD DATA for this plant (integrate naturally — no stuffing):"]
+    if gsc_hits:
+        lines.append("  Google Search Console (real buyer searches from succulentsbox.com):")
+        for k in gsc_hits[:6]:
+            lines.append(f'    "{k["kw"]}" — {k["clicks"]} clicks, pos {k["position"]}, {k["impressions"]:,} impressions')
+    if uber_hits:
+        lines.append("  Ubersuggest (search volume data):")
+        for k in uber_hits[:5]:
+            lines.append(f'    "{k["kw"]}" — volume {k["volume"]}, SEO difficulty {k["difficulty"]}')
+    lines.append("  → Use the highest-click / highest-volume keywords in Title, Meta, and naturally in tab content.")
+
+    return "\n".join(lines)
+
+
+@app.route("/keywords-status")
+def keywords_status():
+    """Quick health-check: how many keywords are cached."""
+    try:
+        data = _load_keywords()
+        return jsonify({
+            "gsc_rows": len(data.get("gsc", [])),
+            "uber_rows": len(data.get("uber", [])),
+            "cache_age_sec": int(time.time() - _kw_cache_time),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 ICONS = {
     "cactus":      "https://cdn.shopify.com/s/files/1/2198/4603/files/Cactus_26a62e4c-2f57-4ecf-97de-fc345c4a381c_480x480.png?v=1600401339",
@@ -85,13 +213,16 @@ Exactly 3 paragraphs separated by <br><br>
 
 
 def build_prompt(plant_name: str) -> str:
-    return f"""Plant: {plant_name}
+    kw_context = _plant_keywords_context(plant_name)
+    kw_block = f"\n\n{kw_context}" if kw_context else ""
+    return f"""Plant: {plant_name}{kw_block}
 
 Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
 - Title: 70-80 characters, plant name first, then notable functional features, AI-search optimized
 - Meta: 160-200 characters, buyer intent focus (why buy this plant?), snippet-friendly, no keyword stuffing
 - Tabs: correct icons, paragraphs separated by <br><br>, accurate USDA zones
-- No em dashes, no bold, soft pet/child safety language, skip inapplicable features"""
+- No em dashes, no bold, soft pet/child safety language, skip inapplicable features
+- If SEO keyword data is provided above, weave the strongest keywords naturally into Title, Meta, and tab content. Never repeat or stuff keywords."""
 
 
 def parse_all(text: str):
