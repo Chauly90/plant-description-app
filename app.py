@@ -185,13 +185,20 @@ TAB1 — Description: exactly 3 paragraphs, each on ONE topic:
 - Para 2 (appearance + benefits): leaf/stem shape, color, texture, size, growth habit, best pot style, practical uses (only if true), pet/child safety, where to place at home
 - Para 3 (shipping note): plants are shipped bare-root without soil, well-packaged to survive transit; any specific shipping notes for this plant (e.g. fragile leaves, cold sensitivity)
 
-TAB2 — Care Guide: 6 paragraphs, one per topic. No overlap with TAB1.
-- Light / Water / Soil / Temperature & Humidity / Fertilizer / Growth & Repotting
+TAB2 — Care Guide: 6 short paragraphs, one per topic. Keep each paragraph concise — 2-3 sentences max. No overlap with TAB1.
+- Para 1 Light: light requirements
+- Para 2 Water: watering frequency and method
+- Para 3 Soil: soil type and drainage needs
+- Para 4 Temperature & Humidity: ideal range, cold tolerance, humidity notes
+- Para 5 Fertilizer: feeding schedule and type
+- Para 6 USDA Hardiness Zones: state the exact zone range (e.g. Zones 9-11), list 5-8 specific US states where this plant can grow outdoors year-round (e.g. California, Florida, Texas, Arizona, Hawaii), and note it is grown as a houseplant everywhere else. Purpose: help buyers in those states know they can grow this outdoors.
 
-TAB3 — FAQs/Common Issues: 4-5 Q&A pairs about this specific plant.
-- Each pair formatted as: Q:[question]<br>A:[answer]
-- Cover the most common buyer questions: watering frequency, light needs, why leaves are dropping/yellowing, propagation, and one other relevant topic for this plant
-- Answers must be specific to this plant, not generic. 2-3 sentences per answer.
+TAB3 — FAQs/Common Issues: 5-6 Q&A pairs about THIS SPECIFIC plant by name.
+- Questions must reflect real searches and common buyer concerns for this exact plant (not generic plant questions)
+- Topics to cover: the most searched questions about this plant's care, why its leaves change color or drop, how to propagate it, common pests or problems, and 1-2 other issues unique to this species
+- Each answer must be specific to this plant — mention the plant name or its traits in the answer
+- 2-3 sentences per answer. Keep answers direct and helpful.
+- Each pair formatted exactly as: Q:[question]<br>A:[answer]<br><br>
 
 OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===, nothing before or after:
 
@@ -212,7 +219,7 @@ Exactly 3 paragraphs separated by <br><br>
 {icon('sun')} {icon('water')} {icon('soil')} {icon('temperature')} {icon('fertilizer')} {icon('growing')}
 
 ===TAB3===
-4-5 Q&A pairs, each formatted exactly as:
+5-6 Q&A pairs, each formatted exactly as:
 Q:[question]<br>A:[answer]<br><br>"""
 
 
@@ -225,8 +232,8 @@ Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
 - Title: 70-80 characters, plant name first, then notable functional features, AI-search optimized
 - Meta: 160-200 characters, buyer intent focus (why buy this plant?), snippet-friendly, no keyword stuffing
 - TAB1 Description: 3 paragraphs with cactus/house/spackle icons. Para 3 must mention plants ship bare-root without soil, well-packaged for safe transit.
-- TAB2 Care Guide: 6 paragraphs (sun/water/soil/temperature/fertilizer/growing icons), no overlap with TAB1
-- TAB3 FAQs/Common Issues: 4-5 Q&A pairs specific to this plant, formatted as Q:[question]<br>A:[answer]<br><br>
+- TAB2 Care Guide: 6 short paragraphs (sun/water/soil/temperature/fertilizer/growing icons), 2-3 sentences each, no overlap with TAB1. The LAST paragraph (growing icon) must include exact USDA zone range, list 5-8 specific US states where it grows outdoors year-round, and note it is a houseplant everywhere else.
+- TAB3 FAQs/Common Issues: 5-6 Q&A pairs. Questions MUST be specific to THIS plant (mention the plant name or its unique traits). Cover real buyer searches: care mistakes, leaf color changes, propagation, common pests, and species-specific issues. Format: Q:[question]<br>A:[answer]<br><br>
 - No em dashes, no bold, soft pet/child safety language, skip inapplicable features
 - If SEO keyword data is provided above, weave the strongest keywords naturally into Title, Meta, and tab content. Never repeat or stuff keywords."""
 
