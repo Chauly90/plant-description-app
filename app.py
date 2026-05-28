@@ -194,7 +194,7 @@ GLOBAL WRITING RULES (apply to all sections):
 
 TITLE: 70-80 characters. Plant name first, then 1-2 of its most searchable functional features (e.g. "easy care," "air-purifying," "pet friendly," "drought tolerant," "low light"). No em dashes.
 
-META: 150-160 characters exactly (count carefully — must be between 150 and 160).
+META: 160-200 characters exactly (count carefully — must be between 160 and 200).
   - Written for SELLING, not for plant care advice. Think: why would someone buy this as a gift or for their home?
   - Include the plant's main keyword (its name) + at least 1 secondary keyword (e.g. succulent, houseplant, indoor plant, air-purifying plant, easy care plant).
   - Front-load the most compelling value so AI assistants can extract it as a featured snippet.
@@ -276,7 +276,7 @@ def build_prompt(plant_name: str) -> str:
 
 Write all five sections for this plant following the OUTPUT format exactly.
 - TITLE: 70-80 chars, plant name first, 1-2 functional features.
-- META: 150-160 chars exactly. Sales-focused (why buy it, not how to care for it). Main keyword + 1 secondary keyword. Snippet-friendly.
+- META: 160-200 chars exactly. Sales-focused (why buy it, not how to care for it). Main keyword + 1 secondary keyword. Snippet-friendly.
 - TAB1: 4 paragraphs, same HTML format (icon token + &nbsp;<span>text</span><br><br>). Weave in relevant functional features naturally — only those TRUE for this plant. Para 4 always ends with bare-root shipping note.
 - TAB2: 6 items [[SUN]][[WATER]][[SOIL]][[TEMPERATURE]][[FERTILIZER]][[SPACKLE]], one sentence each. Last item: indoor note FIRST, then USDA zones + US states.
 - TAB3: 6 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific.
