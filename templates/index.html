@@ -1222,7 +1222,7 @@
             <span class="hp-result-value" id="hpRowCost">—</span>
           </div>
           <div class="hp-result-row">
-            <span class="hp-result-label">Overhead</span>
+            <span class="hp-result-label">After markup <span style="font-weight:400;color:#aaa">(×2 + $2)</span></span>
             <span class="hp-result-value" id="hpRowOverhead">—</span>
           </div>
           <div class="hp-result-row">
@@ -1801,12 +1801,12 @@
 
   /* ══ Houseplant Price Calculator ══ */
   const HP_FEES = {
-    "2":  { overhead: 17.00, shipping:  8.45 },
-    "3":  { overhead: 17.00, shipping:  8.45 },
-    "4":  { overhead: 17.00, shipping: 10.10 },
-    "6":  { overhead: 23.00, shipping: 16.75 },
-    "8":  { overhead: 30.00, shipping: 27.20 },
-    "10": { overhead: 40.00, shipping: 32.50 },
+    "2":  { shipping:  8.45 },
+    "3":  { shipping:  8.45 },
+    "4":  { shipping: 10.10 },
+    "6":  { shipping: 16.75 },
+    "8":  { shipping: 27.20 },
+    "10": { shipping: 32.50 },
   };
 
   function hpFmt(n) {
@@ -1820,11 +1820,12 @@
 
     if (isNaN(cost) || cost < 0) { box.classList.remove("visible"); return; }
 
-    const { overhead, shipping } = HP_FEES[size];
-    const total = cost + overhead + shipping;
+    const { shipping } = HP_FEES[size];
+    const markup = cost * 2 + 2;
+    const total  = markup + shipping;
 
     document.getElementById("hpRowCost").textContent     = hpFmt(cost);
-    document.getElementById("hpRowOverhead").textContent  = hpFmt(overhead);
+    document.getElementById("hpRowOverhead").textContent  = hpFmt(markup);
     document.getElementById("hpRowShipping").textContent  = hpFmt(shipping);
     document.getElementById("hpRowTotal").textContent     = hpFmt(total);
     box.classList.add("visible");
