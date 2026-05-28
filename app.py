@@ -155,77 +155,75 @@ def icon(name):
     return f'<img data-mce-fragment="1" width="16" height="16" data-src="{ICONS[name]}" class="lazyload" alt="">'
 
 
-SYSTEM_PROMPT = f"""You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-friendly descriptions in English.
+# Placeholder tokens Claude writes → replaced with actual <img> HTML after parsing
+ICON_TOKENS = {
+    "[[CACTUS]]":      "cactus",
+    "[[HOUSE]]":       "house",
+    "[[GROWING]]":     "growing",
+    "[[SPACKLE]]":     "spackle",
+    "[[SUN]]":         "sun",
+    "[[WATER]]":       "water",
+    "[[SOIL]]":        "soil",
+    "[[TEMPERATURE]]": "temperature",
+    "[[FERTILIZER]]":  "fertilizer",
+}
 
-WRITING RULES — follow strictly for ALL sections:
-1. CONCISE: Every sentence must add value. No filler.
-2. NO EM DASHES: Never use — or –. Use commas or rewrite.
-3. NO BOLD IN TABS 1 & 2: Never use ** or <b> or <strong> in Description or Care Guide.
-4. SKIP IF NOT APPLICABLE: Omit features that are not true for this plant. No "no" answers.
-5. PET SAFETY: If safe, write "This plant is pet friendly" naturally. If not safe, use soft language like "best placed away from curious cats and dogs." NEVER use: toxic, non-toxic, poisonous.
-6. CHILD SAFETY: Use gentle phrasing like "place out of reach of young children." NEVER use: toxic, poisonous, dangerous, hazardous.
-7. NO REPETITION: Do not repeat info across tabs.
+def replace_icon_tokens(text: str) -> str:
+    """Swap [[TOKEN]] placeholders for actual <img> icon HTML."""
+    for token, name in ICON_TOKENS.items():
+        text = text.replace(token, icon(name))
+    return text
 
-TITLE rules:
-- 70-80 characters (count carefully, must be at least 70)
-- Plant name must appear first in the title
-- After the plant name, highlight 1-2 of this plant's most notable functional features (e.g., "easy care," "air-purifying," "pet friendly," "drought tolerant," "fast growing," "low light," "healing gel")
-- Use natural, engaging language optimized for AI Search
-- No em dashes, no bold, no keyword stuffing
 
-META DESCRIPTION rules:
-- 160-200 characters (count carefully, must be at least 160)
-- Written from the buyer's perspective: why would someone want this plant?
-- Include the plant's main keyword (name) and at least 1 secondary keyword
-- Natural sentence flow, conversational tone, no keyword stuffing, no em dashes
+SYSTEM_PROMPT = """You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-friendly descriptions in English.
 
-TAB1 — Description: exactly 4 paragraphs, each on ONE topic:
-- Para 1 (identity): engaging opening, common name, scientific name, plant family, origin region
-- Para 2 (appearance): leaf/stem shape, color, texture, unique visual features, growth habit
-- Para 3 (notable traits): special features true for THIS plant only (blooms, fragrance, air purification, drought tolerance, growth speed, etc.), pet/child safety, best placement at home
-- Para 4 (growing + shipping): why it is rewarding or easy to grow, propagation if notable, ships bare-root without soil, well-packaged for safe transit
+WRITING RULES:
+1. CONCISE — every sentence must add value, no filler.
+2. NO EM DASHES — never use — or –, use commas or rewrite.
+3. NO BOLD in TAB1 or TAB2 — no ** <b> or <strong> there.
+4. SKIP IF NOT TRUE — omit anything that does not apply to this plant.
+5. PET SAFETY — if safe: "This plant is pet friendly." If not: "best placed away from curious cats and dogs." NEVER say toxic/poisonous.
+6. CHILD SAFETY — "place out of reach of young children." NEVER say toxic/poisonous/dangerous.
+7. NO REPETITION — do not repeat information across tabs.
 
-TAB2 — Care Guide: exactly 6 items. Each item = icon + topic label + one concise sentence. Keep every item to ONE sentence. No overlap with TAB1.
-- Item 1 Light: one sentence on light needs
-- Item 2 Water: one sentence on watering frequency and method
-- Item 3 Soil: one sentence on soil type
-- Item 4 Temperature: one sentence on ideal range and cold tolerance
-- Item 5 Fertilizer: one sentence on feeding schedule
-- Item 6 USDA Zones: exact zone range + 4-6 specific US states where it grows outdoors year-round + note it is a houseplant elsewhere (1-2 sentences)
+TITLE: 70-80 characters. Plant name first, then 1-2 functional features. No em dashes.
+META: 160-200 characters. Buyer-intent, conversational, no keyword stuffing.
 
-TAB3 — FAQs/Common Issues: exactly 6 Q&A pairs about THIS SPECIFIC plant.
-- Questions must reflect real buyer searches for this exact plant species (not generic plant care questions)
-- Cover: most common care mistake, why leaves drop or change color, how to propagate, common pests or diseases, and 2 other questions unique to this species
-- Each answer: 1-2 sentences, direct and specific — must mention the plant name or its distinctive trait
-- Use <strong> tags on the Q: line only
+TAB1 — Description (4 paragraphs):
+  Para 1 — Identity: engaging open, common name, scientific name, family, origin.
+  Para 2 — Appearance: leaf/stem shape, color, texture, visual features, growth habit.
+  Para 3 — Notable traits: blooms/fragrance/special adaptations (only if real), pet/child safety, best home placement.
+  Para 4 — Growing + Shipping: why it is easy/rewarding, propagation if notable, ships bare-root without soil, well-packaged for safe transit.
 
-OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===, nothing before or after:
+TAB2 — Care Guide (6 items, ONE sentence each):
+  Item 1 Light, Item 2 Water, Item 3 Soil, Item 4 Temperature, Item 5 Fertilizer.
+  Item 6 USDA Zones: exact zone range + 4-6 specific US states that can grow it outdoors year-round + note it is a houseplant everywhere else.
+
+TAB3 — FAQs (exactly 6 Q&As, all inside one <p> tag):
+  Questions must be real buyer searches specific to THIS plant species.
+  Cover: most common care mistake, why leaves drop/change color, propagation, common pests, and 2 plant-specific topics.
+  Answers: 1-2 sentences, direct, mention the plant name or its trait. Bold the Q line with <strong>.
+
+ICON TOKENS — use these exact tokens where indicated, do not invent others:
+  TAB1: [[CACTUS]] [[HOUSE]] [[GROWING]] [[SPACKLE]]
+  TAB2: [[SUN]] [[WATER]] [[SOIL]] [[TEMPERATURE]] [[FERTILIZER]] [[SPACKLE]]
+
+OUTPUT — output ONLY these five sections, nothing before or after:
 
 ===TITLE===
-[title — plain text, 70-80 characters, no HTML]
+[plain text, 70-80 chars]
 
 ===META===
-[meta description — plain text, 160-200 characters, no HTML]
+[plain text, 160-200 chars]
 
 ===TAB1===
-Exactly 4 blocks separated by <br><br>. Each block: icon + &nbsp;<span>text</span>
-{icon('cactus')} &nbsp;<span>Para 1 text.</span><br><br>
-{icon('house')} &nbsp;<span>Para 2 text.</span><br><br>
-{icon('growing')} &nbsp;<span>Para 3 text.</span><br><br>
-{icon('spackle')} &nbsp;<span>Para 4 text.</span>
+[[CACTUS]] &nbsp;<span>Para 1 text.</span><br><br>[[HOUSE]] &nbsp;<span>Para 2 text.</span><br><br>[[GROWING]] &nbsp;<span>Para 3 text.</span><br><br>[[SPACKLE]] &nbsp;<span>Para 4 text.</span>
 
 ===TAB2===
-Exactly 6 blocks separated by <br><br>. Each block: icon + &nbsp;<span>Topic: one sentence.</span>
-{icon('sun')} &nbsp;<span>Light: one sentence.</span><br><br>
-{icon('water')} &nbsp;<span>Water: one sentence.</span><br><br>
-{icon('soil')} &nbsp;<span>Soil: one sentence.</span><br><br>
-{icon('temperature')} &nbsp;<span>Temperature: one sentence.</span><br><br>
-{icon('fertilizer')} &nbsp;<span>Fertilizer: one sentence.</span><br><br>
-{icon('spackle')} &nbsp;<span>USDA Zones: zone range + states + houseplant note.</span>
+[[SUN]] &nbsp;<span>Light: one sentence.</span><br><br>[[WATER]] &nbsp;<span>Water: one sentence.</span><br><br>[[SOIL]] &nbsp;<span>Soil: one sentence.</span><br><br>[[TEMPERATURE]] &nbsp;<span>Temperature: one sentence.</span><br><br>[[FERTILIZER]] &nbsp;<span>Fertilizer: one sentence.</span><br><br>[[SPACKLE]] &nbsp;<span>USDA Zones: zone range, states, houseplant note.</span>
 
 ===TAB3===
-All 6 Q&A pairs inside one <p> block, bold questions, separated by <br><br>:
-<p><strong>Q: question1</strong><br>A: answer1<br><br><strong>Q: question2</strong><br>A: answer2<br><br><strong>Q: question3</strong><br>A: answer3<br><br><strong>Q: question4</strong><br>A: answer4<br><br><strong>Q: question5</strong><br>A: answer5<br><br><strong>Q: question6</strong><br>A: answer6</p>"""
+<p><strong>Q: question 1</strong><br>A: answer 1<br><br><strong>Q: question 2</strong><br>A: answer 2<br><br><strong>Q: question 3</strong><br>A: answer 3<br><br><strong>Q: question 4</strong><br>A: answer 4<br><br><strong>Q: question 5</strong><br>A: answer 5<br><br><strong>Q: question 6</strong><br>A: answer 6</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
@@ -233,14 +231,13 @@ def build_prompt(plant_name: str) -> str:
     kw_block = f"\n\n{kw_context}" if kw_context else ""
     return f"""Plant: {plant_name}{kw_block}
 
-Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
-- Title: 70-80 characters, plant name first, then 1-2 functional features, AI-search optimized
-- Meta: 160-200 characters, buyer intent focus, snippet-friendly, no keyword stuffing
-- TAB1: 4 blocks (cactus/house/growing/spackle icons), format: icon &nbsp;<span>text</span><br><br>. Para 4 must mention bare-root shipping.
-- TAB2: 6 blocks (sun/water/soil/temperature/fertilizer/spackle icons), format: icon &nbsp;<span>Topic: one sentence.</span><br><br>. Last block (spackle) = USDA zones + 4-6 US states + houseplant note.
-- TAB3: exactly 6 Q&As inside one <p> block, bold <strong>Q:</strong> lines, answers 1-2 sentences specific to this plant
-- No em dashes, soft pet/child safety language, skip inapplicable features, no bold in TAB1/TAB2
-- If SEO keyword data is provided, weave strongest keywords naturally into Title, Meta, and tab content."""
+Write all five sections for this plant following the OUTPUT format exactly.
+- Use [[CACTUS]] [[HOUSE]] [[GROWING]] [[SPACKLE]] tokens in TAB1 (in that order).
+- Use [[SUN]] [[WATER]] [[SOIL]] [[TEMPERATURE]] [[FERTILIZER]] [[SPACKLE]] tokens in TAB2 (in that order).
+- TAB3: all 6 Q&As inside one <p> tag, bold Q lines with <strong>, specific to this plant.
+- TAB4 Para 4 must mention bare-root shipping. TAB2 last item must include USDA zones + US states.
+- No em dashes, no bold in TAB1/TAB2, soft safety language, skip inapplicable features.
+- If SEO keyword data is above, weave top keywords naturally into Title, Meta, and tab content."""
 
 
 def parse_all(text: str):
@@ -261,13 +258,20 @@ def parse_all(text: str):
     meta  = between("META",  "TAB1")
     tab1  = between("TAB1",  "TAB2")
     tab2  = between("TAB2",  "TAB3")
-    tab3  = after("TAB3")
+    tab3  = after("TAB3") or ""
 
-    if all([title, meta, tab1, tab2, tab3]):
-        print(f"[PARSE_OK] title={len(title)} meta={len(meta)}", file=sys.stderr, flush=True)
+    # Replace icon tokens with actual <img> HTML
+    if tab1: tab1 = replace_icon_tokens(tab1)
+    if tab2: tab2 = replace_icon_tokens(tab2)
+    if tab3: tab3 = replace_icon_tokens(tab3)
+
+    # Require at minimum: title, meta, tab1, tab2
+    if title and meta and tab1 and tab2:
+        print(f"[PARSE_OK] title={len(title)} tab3={'yes' if tab3 else 'empty'}", file=sys.stderr, flush=True)
         return title, meta, tab1, tab2, tab3
 
-    print(f"[PARSE_FAILED] text={text[:600]!r}", file=sys.stderr, flush=True)
+    print(f"[PARSE_FAILED] title={bool(title)} meta={bool(meta)} tab1={bool(tab1)} tab2={bool(tab2)}", file=sys.stderr, flush=True)
+    print(f"[PARSE_FAILED] raw={text[:800]!r}", file=sys.stderr, flush=True)
     return None, None, None, None, None
 
 
