@@ -242,10 +242,10 @@ TAB2 — Care Guide (6 items, ONE sentence each):
   Item 1 Light, Item 2 Water, Item 3 Soil, Item 4 Temperature, Item 5 Fertilizer.
   Item 6 USDA Zones: ALWAYS lead with the indoor note first (e.g. "Best grown as a houseplant indoors across most of the US"), THEN state the zone range and 4-6 specific US states where it can grow outdoors year-round. Indoor first, outdoor second.
 
-TAB3 — FAQs (exactly 6 Q&As, all inside one <p> tag):
+TAB3 — FAQs (exactly 5 Q&As, all inside one <p> tag):
   Questions must be the real buyer searches people type about THIS specific plant (not generic).
-  Cover: most common care mistake, why leaves drop or change color, how to propagate, common pests, and 2 other topics specific to this species.
-  Answers: 1-2 sentences, direct, mention the plant name or its specific trait. Bold Q lines with <strong>.
+  Cover: most common care mistake, why leaves drop or change color, how to propagate, common pests, and 1 other topic specific to this species.
+  Answers: MAXIMUM 2 short sentences. Each answer must be fully complete — never cut off mid-sentence. Direct and specific to this plant.
 
 ICON TOKENS — use these exact tokens where indicated, do not invent others:
   TAB1: [[CACTUS]] [[HOUSE]] [[GROWING]] [[SPACKLE]]
@@ -266,7 +266,7 @@ OUTPUT — output ONLY these five sections, nothing before or after:
 [[SUN]] &nbsp;<span>Light: one sentence.</span><br><br>[[WATER]] &nbsp;<span>Water: one sentence.</span><br><br>[[SOIL]] &nbsp;<span>Soil: one sentence.</span><br><br>[[TEMPERATURE]] &nbsp;<span>Temperature: one sentence.</span><br><br>[[FERTILIZER]] &nbsp;<span>Fertilizer: one sentence.</span><br><br>[[SPACKLE]] &nbsp;<span>USDA Zones: best grown as a houseplant indoors across most of the US; it thrives outdoors year-round in Zones [X]-[Y], including [State1], [State2], [State3], and [State4].</span>
 
 ===TAB3===
-<p><strong>Q: question 1</strong><br>A: answer 1<br><br><strong>Q: question 2</strong><br>A: answer 2<br><br><strong>Q: question 3</strong><br>A: answer 3<br><br><strong>Q: question 4</strong><br>A: answer 4<br><br><strong>Q: question 5</strong><br>A: answer 5<br><br><strong>Q: question 6</strong><br>A: answer 6</p>"""
+<p><strong>Q: question 1</strong><br>A: answer 1<br><br><strong>Q: question 2</strong><br>A: answer 2<br><br><strong>Q: question 3</strong><br>A: answer 3<br><br><strong>Q: question 4</strong><br>A: answer 4<br><br><strong>Q: question 5</strong><br>A: answer 5</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
@@ -279,7 +279,7 @@ Write all five sections for this plant following the OUTPUT format exactly.
 - META: 160-200 chars exactly. Sales-focused (why buy it, not how to care for it). Main keyword + 1 secondary keyword. Snippet-friendly.
 - TAB1: 4 paragraphs, same HTML format (icon token + &nbsp;<span>text</span><br><br>). Weave in relevant functional features naturally — only those TRUE for this plant. Para 4 always ends with bare-root shipping note.
 - TAB2: 6 items [[SUN]][[WATER]][[SOIL]][[TEMPERATURE]][[FERTILIZER]][[SPACKLE]], one sentence each. Last item: indoor note FIRST, then USDA zones + US states.
-- TAB3: 6 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific.
+- TAB3: exactly 5 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific. Each answer max 2 short complete sentences — never cut off.
 - No em dashes, no bold in TAB1/TAB2, soft pet/child safety language (no toxic/poisonous), skip anything not true.
 - If SEO keyword data is provided, weave top keywords naturally into Title, Meta, and content."""
 
