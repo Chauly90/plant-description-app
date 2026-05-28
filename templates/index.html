@@ -522,6 +522,53 @@
       margin-top: 16px;
       flex-wrap: wrap;
     }
+    /* calc type tabs */
+    .calc-type-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .calc-type-btn {
+      padding: 7px 20px;
+      border: 2px solid #dde8dd;
+      background: #f9fdf9;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #555;
+      transition: all .15s;
+    }
+    .calc-type-btn.active {
+      background: #3d7a35;
+      color: white;
+      border-color: #3d7a35;
+    }
+    .calc-tab-panel { display: block; }
+    .calc-tab-panel.hidden { display: none !important; }
+    .cost-cell { font-weight: 500; color: #555; white-space: nowrap; }
+    .cost-cell .btn-copy-sm { margin-left: 8px; vertical-align: middle; }
+    /* houseplant shopify calc */
+    .hp-shopify-result {
+      margin-top: 18px;
+      background: #f0f8f0;
+      border: 1px solid #dde8dd;
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: none;
+    }
+    .hp-shopify-result.visible { display: block; }
+    .hp-shopify-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #dde8dd;
+    }
+    .hp-shopify-row:last-child { border-bottom: none; }
+    .hp-shopify-row.total { font-weight: 800; font-size: 1.05rem; color: #2d5a27; margin-top: 4px; }
+    .hp-shopify-row .hp-result-value { font-weight: 600; font-family: "Menlo","Consolas",monospace; }
 
     /* ── Houseplant Price Calculator ── */
     .hp-calc-card {
@@ -872,37 +919,71 @@
     <div class="calc-header">💰 Variant SKU &amp; Price Calculator</div>
     <div class="calc-body">
 
-      <div class="calc-inputs">
-        <div class="calc-field">
-          <label>Product Size</label>
-          <select id="calcSize" onchange="calcUpdate()">
-            <option value="2">2 inch</option>
-            <option value="4">4 inch</option>
-          </select>
+      <!-- Tab switcher -->
+      <div class="calc-type-tabs">
+        <button class="calc-type-btn active" onclick="switchCalcTab('succulent', this)">🌵 Succulent</button>
+        <button class="calc-type-btn" onclick="switchCalcTab('houseplant', this)">🌿 Houseplant</button>
+      </div>
+
+      <!-- ── Succulent tab ── -->
+      <div id="calcSucculent" class="calc-tab-panel">
+        <div class="calc-inputs">
+          <div class="calc-field">
+            <label>Product Size</label>
+            <select id="calcSize" onchange="calcUpdate()">
+              <option value="2">2 inch</option>
+              <option value="4">4 inch</option>
+            </select>
+          </div>
+          <div class="calc-field">
+            <label>Product SKU</label>
+            <input id="calcSKU" type="text" placeholder="e.g. S2JN1158" oninput="calcUpdate()" />
+          </div>
+          <div class="calc-field">
+            <label>Cost Per Item ($)</label>
+            <input id="calcCost" type="number" step="0.01" min="0" placeholder="e.g. 4.50" oninput="calcUpdate()" />
+          </div>
         </div>
-        <div class="calc-field">
-          <label>Product SKU</label>
-          <input id="calcSKU" type="text" placeholder="e.g. S2JN1158" oninput="calcUpdate()" />
-        </div>
-        <div class="calc-field">
-          <label>Item Price ($)</label>
-          <input id="calcPrice" type="number" step="0.01" min="0" placeholder="e.g. 8.05" oninput="calcUpdate()" />
+
+        <div id="calcResults" class="calc-table-wrap hidden">
+          <table class="calc-table">
+            <thead>
+              <tr>
+                <th>Variant</th>
+                <th>SKU</th>
+                <th>Cost</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody id="calcTableBody"></tbody>
+          </table>
+          <div class="calc-actions">
+            <button class="btn-primary" style="font-size:.85rem;padding:8px 18px" onclick="copyAllVariants()">Copy All (TSV)</button>
+          </div>
         </div>
       </div>
 
-      <div id="calcResults" class="calc-table-wrap hidden">
-        <table class="calc-table">
-          <thead>
-            <tr>
-              <th>Variant</th>
-              <th>SKU</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody id="calcTableBody"></tbody>
-        </table>
-        <div class="calc-actions">
-          <button class="btn-primary" style="font-size:.85rem;padding:8px 18px" onclick="copyAllVariants()">Copy All (TSV)</button>
+      <!-- ── Houseplant tab ── -->
+      <div id="calcHouseplant" class="calc-tab-panel hidden">
+        <div class="calc-inputs" style="grid-template-columns:1fr">
+          <div class="calc-field">
+            <label>Cost Per Item ($)</label>
+            <input id="hpShopifyCost" type="number" step="0.01" min="0" placeholder="e.g. 12.00" oninput="hpShopifyUpdate()" />
+          </div>
+        </div>
+
+        <div id="hpShopifyResult" class="hp-shopify-result">
+          <div class="hp-shopify-row">
+            <span style="color:#666">Cost per item</span>
+            <span class="hp-result-value" id="hpShopifyRowCost">—</span>
+          </div>
+          <div class="hp-shopify-row total">
+            <span>Price <span style="font-weight:400;font-size:0.78rem;color:#666">(Cost × 2 + $2)</span></span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="hp-result-value" id="hpShopifyRowPrice">—</span>
+              <button class="btn-copy-sm" id="hpShopifyCopyBtn" onclick="hpShopifyCopy()">Copy</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1477,44 +1558,51 @@
   }
 
   /* ══ Pricing Calculator ══ */
-  const VARIANTS = {
+
+  // costAdd = extra cost for the pot; Price = (plantCost + costAdd) × 2
+  const SUCCULENT_VARIANTS = {
     "2": [
-      { name: "Plastic Pot",    skuSuffix: "",                  priceAdd: 0     },
-      { name: "Clay Pot",       skuSuffix: "+EEZZ2742-1",        priceAdd: 5.40  },
-      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",       priceAdd: 7.95  },
-      { name: "Bamboo Pot",     skuSuffix: "+EEZZ7620.BR-1",    priceAdd: 3.00  },
+      { name: "Plastic Pot",      skuSuffix: "",                 costAdd: 0    },
+      { name: "Clay Pot",         skuSuffix: "+EEZZ2742-1",      costAdd: 2.70 },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",        costAdd: 4.10 },
+      { name: "Bamboo Pot",       skuSuffix: "+EEZZ7620.BR-1",   costAdd: 1.50 },
     ],
     "4": [
-      { name: "Plastic Pot",    skuSuffix: "",                  priceAdd: 0     },
-      { name: "Clay Pot",       skuSuffix: "+EEZZ2742-1",       priceAdd: 5.40  },
-      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",       priceAdd: 7.95  },
-      { name: "Custom Pot",     skuSuffix: "+CUSTOMPOT",        priceAdd: 13.95 },
-      { name: "Bamboo Pot",     skuSuffix: "+EEZZ7621.BR-1",    priceAdd: 3.00  },
+      { name: "Plastic Pot",      skuSuffix: "",                 costAdd: 0    },
+      { name: "Clay Pot",         skuSuffix: "+EEZZ2742-1",      costAdd: 2.70 },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",        costAdd: 4.10 },
+      { name: "Bamboo Pot",       skuSuffix: "+EEZZ7621.BR-1",   costAdd: 1.50 },
+      { name: "Custom Pot",       skuSuffix: "+CUSTOMPOT",       costAdd: 9.00 },
     ],
   };
 
   function fmtPrice(n) {
-    // Format to 2 decimals, drop trailing .00 only if it's a whole dollar
     const s = n.toFixed(2);
     return "$" + (s.endsWith(".00") ? s.slice(0, -3) : s);
   }
 
+  function switchCalcTab(tab, btn) {
+    document.querySelectorAll(".calc-type-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("calcSucculent").classList.toggle("hidden", tab !== "succulent");
+    document.getElementById("calcHouseplant").classList.toggle("hidden", tab !== "houseplant");
+  }
+
   function calcUpdate() {
-    const size  = document.getElementById("calcSize").value;
-    const sku   = document.getElementById("calcSKU").value.trim();
-    const price = parseFloat(document.getElementById("calcPrice").value);
+    const size = document.getElementById("calcSize").value;
+    const sku  = document.getElementById("calcSKU").value.trim();
+    const cost = parseFloat(document.getElementById("calcCost").value);
 
-    if (!sku || isNaN(price) || price < 0) {
-      hide("calcResults"); return;
-    }
+    if (!sku || isNaN(cost) || cost < 0) { hide("calcResults"); return; }
 
-    const variants = VARIANTS[size];
+    const variants = SUCCULENT_VARIANTS[size];
     const tbody = document.getElementById("calcTableBody");
     tbody.innerHTML = "";
 
     variants.forEach((v, i) => {
       const fullSKU   = sku + v.skuSuffix;
-      const fullPrice = fmtPrice(price + v.priceAdd);
+      const fullCost  = cost + v.costAdd;
+      const fullPrice = fullCost * 2;
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${v.name}</td>
@@ -1522,14 +1610,37 @@
           <span id="sku-${i}">${fullSKU}</span>
           <button class="btn-copy-sm" id="cpsku-${i}" onclick="copyText('sku-${i}','cpsku-${i}')">Copy</button>
         </td>
+        <td class="cost-cell">
+          <span id="cost-${i}">${fmtPrice(fullCost)}</span>
+          <button class="btn-copy-sm" id="cpcost-${i}" onclick="copyText('cost-${i}','cpcost-${i}')">Copy</button>
+        </td>
         <td class="price-cell">
-          <span id="price-${i}">${fullPrice}</span>
+          <span id="price-${i}">${fmtPrice(fullPrice)}</span>
           <button class="btn-copy-sm" id="cpprice-${i}" onclick="copyText('price-${i}','cpprice-${i}')">Copy</button>
         </td>`;
       tbody.appendChild(tr);
     });
 
     show("calcResults");
+  }
+
+  function hpShopifyUpdate() {
+    const cost = parseFloat(document.getElementById("hpShopifyCost").value);
+    const box  = document.getElementById("hpShopifyResult");
+    if (isNaN(cost) || cost < 0) { box.classList.remove("visible"); return; }
+    const price = cost * 2 + 2;
+    document.getElementById("hpShopifyRowCost").textContent  = fmtPrice(cost);
+    document.getElementById("hpShopifyRowPrice").textContent = fmtPrice(price);
+    box.classList.add("visible");
+  }
+
+  function hpShopifyCopy() {
+    const text = document.getElementById("hpShopifyRowPrice").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("hpShopifyCopyBtn");
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
   }
 
   function copyText(spanId, btnId) {
@@ -1544,10 +1655,14 @@
 
   function copyAllVariants() {
     const rows = document.querySelectorAll("#calcTableBody tr");
-    const lines = ["Variant\tSKU\tPrice"];
+    const lines = ["Variant\tSKU\tCost\tPrice"];
     rows.forEach(tr => {
       const cells = tr.querySelectorAll("td");
-      lines.push(`${cells[0].textContent}\t${cells[1].textContent}\t${cells[2].textContent}`);
+      const variant = cells[0].textContent.trim();
+      const sku     = cells[1].querySelector("span").textContent.trim();
+      const cost    = cells[2].querySelector("span").textContent.trim();
+      const price   = cells[3].querySelector("span").textContent.trim();
+      lines.push(`${variant}\t${sku}\t${cost}\t${price}`);
     });
     navigator.clipboard.writeText(lines.join("\n")).then(() => {
       const btn = event.target;
