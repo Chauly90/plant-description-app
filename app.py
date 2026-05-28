@@ -146,6 +146,8 @@ ICONS = {
     "soil":        "https://cdn.shopify.com/s/files/1/2198/4603/files/Soil_40a149eb-9d43-4bf0-ac38-159c702c72f2_480x480.png?v=1600397158",
     "temperature": "https://cdn.shopify.com/s/files/1/2198/4603/files/Temperature_f0d54887-2130-48b9-9020-c9b8cdec1f12_480x480.png?v=1600399389",
     "fertilizer":  "https://cdn.shopify.com/s/files/1/2198/4603/files/Fertilizer_5853ff19-6010-410a-a082-3abe233cb8d2_480x480.png?v=1600399297",
+    "spackle":     "https://cdn.shopify.com/s/files/1/2198/4603/files/Spackle_0b1c313b-e538-42e0-8818-7f0bdf63d530_480x480.png?v=1600397104",
+    "growing":     "https://cdn.shopify.com/s/files/1/2198/4603/files/Growing_2961efa3-9828-496c-8a2c-fa57f0dd8914_480x480.png?v=1600399365",
 }
 
 
@@ -180,36 +182,38 @@ META DESCRIPTION rules:
 
 TAB1 — Description: exactly 3 paragraphs, each on ONE topic:
 - Para 1 (identity): common name, scientific name, nicknames, brief origin
-- Para 2 (appearance): leaf/stem shape, color, texture, size, growth habit, best pot style
-- Para 3 (benefits & home): practical uses (only if true), pet/child safety, where to place at home
+- Para 2 (appearance + benefits): leaf/stem shape, color, texture, size, growth habit, best pot style, practical uses (only if true), pet/child safety, where to place at home
+- Para 3 (shipping note): plants are shipped bare-root without soil, well-packaged to survive transit; any specific shipping notes for this plant (e.g. fragile leaves, cold sensitivity)
 
-TAB2 — Care: 5 paragraphs, one per topic. No overlap with TAB1.
-- Light / Water / Soil / Temperature & Humidity / Fertilizer
+TAB2 — Care Guide: 6 paragraphs, one per topic. No overlap with TAB1.
+- Light / Water / Soil / Temperature & Humidity / Fertilizer / Growth & Repotting
 
-TAB3 — USDA Hardiness: zone range, minimum temperature in °F and °C, outdoor vs indoor guidance, frost note.
+TAB3 — FAQs/Common Issues: 4-5 Q&A pairs about this specific plant.
+- Each pair formatted as: Q:[question]<br>A:[answer]
+- Cover the most common buyer questions: watering frequency, light needs, why leaves are dropping/yellowing, propagation, and one other relevant topic for this plant
+- Answers must be specific to this plant, not generic. 2-3 sentences per answer.
 
 OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===, nothing before or after:
 
 ===TITLE===
-[title — plain text, 60-70 characters, no HTML]
+[title — plain text, 70-80 characters, no HTML]
 
 ===META===
-[meta description — plain text, 150-160 characters, no HTML]
+[meta description — plain text, 160-200 characters, no HTML]
 
 ===TAB1===
 Exactly 3 paragraphs separated by <br><br>
 - Para 1 starts with: {icon('cactus')}
-- Para 2 starts with: {icon('soil')}
-- Para 3 starts with: {icon('house')}
+- Para 2 starts with: {icon('house')}
+- Para 3 starts with: {icon('spackle')}
 
 ===TAB2===
-5 paragraphs separated by <br><br>, each starting with its icon:
-{icon('sun')} {icon('water')} {icon('soil')} {icon('temperature')} {icon('fertilizer')}
+6 paragraphs separated by <br><br>, each starting with its icon:
+{icon('sun')} {icon('water')} {icon('soil')} {icon('temperature')} {icon('fertilizer')} {icon('growing')}
 
 ===TAB3===
-<p><img width="1024" height="887" data-src="//cdn.shopify.com/s/files/1/2198/4603/files/map-of-growing-zones-usa-17-01_1024x1024.jpg?v=1553694426" class="lazyload" alt=""></p>
-<p>USDA Hardiness Zones [X]-[Y] | Minimum temperature: [°F] ([°C])</p>
-<p>[Outdoor year-round suitability and frost/winter care note.]</p>"""
+4-5 Q&A pairs, each formatted exactly as:
+Q:[question]<br>A:[answer]<br><br>"""
 
 
 def build_prompt(plant_name: str) -> str:
@@ -220,7 +224,9 @@ def build_prompt(plant_name: str) -> str:
 Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
 - Title: 70-80 characters, plant name first, then notable functional features, AI-search optimized
 - Meta: 160-200 characters, buyer intent focus (why buy this plant?), snippet-friendly, no keyword stuffing
-- Tabs: correct icons, paragraphs separated by <br><br>, accurate USDA zones
+- TAB1 Description: 3 paragraphs with cactus/house/spackle icons. Para 3 must mention plants ship bare-root without soil, well-packaged for safe transit.
+- TAB2 Care Guide: 6 paragraphs (sun/water/soil/temperature/fertilizer/growing icons), no overlap with TAB1
+- TAB3 FAQs/Common Issues: 4-5 Q&A pairs specific to this plant, formatted as Q:[question]<br>A:[answer]<br><br>
 - No em dashes, no bold, soft pet/child safety language, skip inapplicable features
 - If SEO keyword data is provided above, weave the strongest keywords naturally into Title, Meta, and tab content. Never repeat or stuff keywords."""
 
@@ -263,8 +269,8 @@ def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
     return (
         '<ul class="tabs">\n'
         '<li><a href="#tab1" class="active">Description</a></li>\n'
-        '<li><a href="#tab2">Light/Soil/Water</a></li>\n'
-        '<li><a href="#tab3">Hardiness</a></li>\n'
+        '<li><a href="#tab2">Care Guide</a></li>\n'
+        '<li><a href="#tab3">FAQs/Common Issues</a></li>\n'
         "</ul>\n"
         "<!--Start tab content-->\n"
         '<ul class="tabs-content">\n'
