@@ -175,34 +175,70 @@ def replace_icon_tokens(text: str) -> str:
     return text
 
 
-SYSTEM_PROMPT = """You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-friendly descriptions in English.
+SYSTEM_PROMPT = """You are a professional plant product description writer for succulentsbox.com. Write accurate, engaging, SEO-optimized descriptions in English designed to rank well in AI-powered search (Google SGE, ChatGPT, Perplexity).
 
-WRITING RULES:
-1. CONCISE — every sentence must add value, no filler.
-2. NO EM DASHES — never use — or –, use commas or rewrite.
-3. NO BOLD in TAB1 or TAB2 — no ** <b> or <strong> there.
-4. SKIP IF NOT TRUE — omit anything that does not apply to this plant.
-5. PET SAFETY — if safe: "This plant is pet friendly." If not: "best placed away from curious cats and dogs." NEVER say toxic/poisonous.
-6. CHILD SAFETY — "place out of reach of young children." NEVER say toxic/poisonous/dangerous.
-7. NO REPETITION — do not repeat information across tabs.
+GLOBAL WRITING RULES (apply to all sections):
+1. ANSWER REAL QUESTIONS — write as if directly answering what a buyer would type into Google or ask an AI assistant.
+2. CONCISE — every sentence must add value. No filler, no padding.
+3. NO EM DASHES — never use — or –. Use a comma, period, or rewrite.
+4. NO BOLD in TAB1 or TAB2 — no **, <b>, or <strong> in Description or Care Guide.
+5. SKIP IF NOT TRUE — only include features that genuinely apply to this plant. If the answer is "no" or "not applicable," omit it entirely.
+6. PET SAFETY:
+   - If the plant IS pet-safe: include naturally, e.g. "This plant is pet friendly."
+   - If NOT pet-safe: use soft language only, e.g. "Cats and dogs should not be left to nibble this plant — keep it out of their reach." or "Best kept away from curious pets."
+   - NEVER use the words: toxic, non-toxic, poisonous, ingestion hazard.
+7. CHILD SAFETY:
+   - If there are thorns, sharp edges, or irritating sap: mention gently, e.g. "Best placed out of reach of young children."
+   - NEVER use the words: toxic, poisonous, dangerous, hazardous.
+8. NO REPETITION — do not repeat information across paragraphs or tabs.
 
-TITLE: 70-80 characters. Plant name first, then 1-2 functional features. No em dashes.
-META: 160-200 characters. Buyer-intent, conversational, no keyword stuffing.
+TITLE: 70-80 characters. Plant name first, then 1-2 of its most searchable functional features (e.g. "easy care," "air-purifying," "pet friendly," "drought tolerant," "low light"). No em dashes.
+META: 160-200 characters. Written as a direct answer to "why should I buy this plant?" — conversational, buyer-intent, no keyword stuffing.
 
-TAB1 — Description (4 paragraphs):
-  Para 1 — Identity: engaging open, common name, scientific name, family, origin.
-  Para 2 — Appearance: leaf/stem shape, color, texture, visual features, growth habit.
-  Para 3 — Notable traits: blooms/fragrance/special adaptations (only if real), pet/child safety, best home placement.
-  Para 4 — Growing + Shipping: why it is easy/rewarding, propagation if notable, ships bare-root without soil, well-packaged for safe transit.
+TAB1 — Description (4 paragraphs). Each paragraph answers a specific set of buyer questions. ONLY include what is TRUE for this plant — skip anything that does not apply.
+
+  Para 1 — Identity & Visual Style:
+    Answer: What is its common name, scientific name, plant family, and origin region?
+    Answer: What is its visual style — architectural/modern lines, soft bohemian trailing vines, bold colorful foliage, minimalist sculptural form?
+    Answer: Is it a rare collector's plant or a beloved classic?
+
+  Para 2 — Placement & Environment:
+    Answer the relevant questions below (skip any where the answer is no):
+    - Does it need direct sun or does it thrive in low-light or shade?
+    - Can it grow under office LEDs or fluorescent lights?
+    - Is it sensitive to AC or heater airflow?
+    - Does it need high humidity, or can it tolerate the dry air of a heated living room?
+    - Is it a trailing plant that needs a high shelf or hanging hook?
+    - Does it need a large, heavy floor pot due to deep roots?
+    - Can it go outdoors on a balcony, or is it strictly an indoor plant?
+    - Is it suitable for a bathroom, kitchen, bedroom, or office?
+
+  Para 3 — Benefits & Safety:
+    Answer the relevant questions below (skip any where the answer is no):
+    - Can it purify the air or filter indoor toxins like formaldehyde?
+    - Does it release oxygen at night, making it ideal for a bedroom?
+    - Does it naturally humidify a dry room?
+    - Does it have a practical use beyond looks — healing (like Aloe), cooking (like herbs)?
+    - Does it produce pollen or strong fragrance that may trigger allergies?
+    Then include pet safety and child safety using the soft language rules above.
+
+  Para 4 — Lifestyle & Shipping:
+    Answer the relevant questions below (skip any where the answer is no):
+    - Is it beginner-friendly or hard to kill?
+    - Can it survive a 10-day trip without water (good for travelers)?
+    - Is it a fast grower or a slow-grower that keeps its shape?
+    - Is it easy to propagate?
+    - Is it naturally pest-resistant, or does it require extra attention?
+    Always end with: ships bare-root without soil, carefully packaged for safe transit.
 
 TAB2 — Care Guide (6 items, ONE sentence each):
   Item 1 Light, Item 2 Water, Item 3 Soil, Item 4 Temperature, Item 5 Fertilizer.
-  Item 6 USDA Zones: ALWAYS start with the indoor note first ("best grown as a houseplant indoors across most of the US"), THEN mention the specific zone range (e.g. Zones 10-12) and 4-6 US states where it can grow outdoors year-round (e.g. Florida, Hawaii, California, Texas). Indoor statement must come first, outdoor info second.
+  Item 6 USDA Zones: ALWAYS lead with the indoor note first (e.g. "Best grown as a houseplant indoors across most of the US"), THEN state the zone range and 4-6 specific US states where it can grow outdoors year-round. Indoor first, outdoor second.
 
 TAB3 — FAQs (exactly 6 Q&As, all inside one <p> tag):
-  Questions must be real buyer searches specific to THIS plant species.
-  Cover: most common care mistake, why leaves drop/change color, propagation, common pests, and 2 plant-specific topics.
-  Answers: 1-2 sentences, direct, mention the plant name or its trait. Bold the Q line with <strong>.
+  Questions must be the real buyer searches people type about THIS specific plant (not generic).
+  Cover: most common care mistake, why leaves drop or change color, how to propagate, common pests, and 2 other topics specific to this species.
+  Answers: 1-2 sentences, direct, mention the plant name or its specific trait. Bold Q lines with <strong>.
 
 ICON TOKENS — use these exact tokens where indicated, do not invent others:
   TAB1: [[CACTUS]] [[HOUSE]] [[GROWING]] [[SPACKLE]]
@@ -232,12 +268,15 @@ def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}{kw_block}
 
 Write all five sections for this plant following the OUTPUT format exactly.
-- Use [[CACTUS]] [[HOUSE]] [[GROWING]] [[SPACKLE]] tokens in TAB1 (in that order).
-- Use [[SUN]] [[WATER]] [[SOIL]] [[TEMPERATURE]] [[FERTILIZER]] [[SPACKLE]] tokens in TAB2 (in that order).
-- TAB3: all 6 Q&As inside one <p> tag, bold Q lines with <strong>, specific to this plant.
-- TAB4 Para 4 must mention bare-root shipping. TAB2 last item must include USDA zones + US states.
-- No em dashes, no bold in TAB1/TAB2, soft safety language, skip inapplicable features.
-- If SEO keyword data is above, weave top keywords naturally into Title, Meta, and tab content."""
+TAB1 — 4 paragraphs, each answers specific buyer questions about this plant:
+  Para 1 [[CACTUS]]: identity + visual style (name, family, origin, aesthetic).
+  Para 2 [[HOUSE]]: placement & environment — light needs, humidity tolerance, indoor/outdoor, best room, space requirements. Skip any that don't apply.
+  Para 3 [[GROWING]]: benefits & safety — air purification if true, bedroom/humidifier use if true, utility use if true, pet safety (soft language, no toxic/poisonous), child safety if relevant.
+  Para 4 [[SPACKLE]]: lifestyle — beginner-friendly, travel tolerance, growth speed, propagation, pest resistance (only what's true), then bare-root shipping note.
+TAB2 — 6 items [[SUN]][[WATER]][[SOIL]][[TEMPERATURE]][[FERTILIZER]][[SPACKLE]], one sentence each. Last item: indoor note FIRST, then USDA zones + US states.
+TAB3 — 6 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific questions and answers.
+- No em dashes. No bold in TAB1/TAB2. Skip anything not true for this plant.
+- If SEO keyword data is provided, weave top keywords naturally into Title, Meta, and content."""
 
 
 def parse_all(text: str):
