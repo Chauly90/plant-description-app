@@ -197,7 +197,7 @@ TAB1 — Description (4 paragraphs):
 
 TAB2 — Care Guide (6 items, ONE sentence each):
   Item 1 Light, Item 2 Water, Item 3 Soil, Item 4 Temperature, Item 5 Fertilizer.
-  Item 6 USDA Zones: exact zone range + 4-6 specific US states that can grow it outdoors year-round + note it is a houseplant everywhere else.
+  Item 6 USDA Zones: ALWAYS start with the indoor note first ("best grown as a houseplant indoors across most of the US"), THEN mention the specific zone range (e.g. Zones 10-12) and 4-6 US states where it can grow outdoors year-round (e.g. Florida, Hawaii, California, Texas). Indoor statement must come first, outdoor info second.
 
 TAB3 — FAQs (exactly 6 Q&As, all inside one <p> tag):
   Questions must be real buyer searches specific to THIS plant species.
@@ -220,7 +220,7 @@ OUTPUT — output ONLY these five sections, nothing before or after:
 [[CACTUS]] &nbsp;<span>Para 1 text.</span><br><br>[[HOUSE]] &nbsp;<span>Para 2 text.</span><br><br>[[GROWING]] &nbsp;<span>Para 3 text.</span><br><br>[[SPACKLE]] &nbsp;<span>Para 4 text.</span>
 
 ===TAB2===
-[[SUN]] &nbsp;<span>Light: one sentence.</span><br><br>[[WATER]] &nbsp;<span>Water: one sentence.</span><br><br>[[SOIL]] &nbsp;<span>Soil: one sentence.</span><br><br>[[TEMPERATURE]] &nbsp;<span>Temperature: one sentence.</span><br><br>[[FERTILIZER]] &nbsp;<span>Fertilizer: one sentence.</span><br><br>[[SPACKLE]] &nbsp;<span>USDA Zones: zone range, states, houseplant note.</span>
+[[SUN]] &nbsp;<span>Light: one sentence.</span><br><br>[[WATER]] &nbsp;<span>Water: one sentence.</span><br><br>[[SOIL]] &nbsp;<span>Soil: one sentence.</span><br><br>[[TEMPERATURE]] &nbsp;<span>Temperature: one sentence.</span><br><br>[[FERTILIZER]] &nbsp;<span>Fertilizer: one sentence.</span><br><br>[[SPACKLE]] &nbsp;<span>USDA Zones: best grown as a houseplant indoors across most of the US; it thrives outdoors year-round in Zones [X]-[Y], including [State1], [State2], [State3], and [State4].</span>
 
 ===TAB3===
 <p><strong>Q: question 1</strong><br>A: answer 1<br><br><strong>Q: question 2</strong><br>A: answer 2<br><br><strong>Q: question 3</strong><br>A: answer 3<br><br><strong>Q: question 4</strong><br>A: answer 4<br><br><strong>Q: question 5</strong><br>A: answer 5<br><br><strong>Q: question 6</strong><br>A: answer 6</p>"""
