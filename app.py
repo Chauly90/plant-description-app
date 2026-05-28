@@ -193,42 +193,49 @@ GLOBAL WRITING RULES (apply to all sections):
 8. NO REPETITION — do not repeat information across paragraphs or tabs.
 
 TITLE: 70-80 characters. Plant name first, then 1-2 of its most searchable functional features (e.g. "easy care," "air-purifying," "pet friendly," "drought tolerant," "low light"). No em dashes.
-META: 160-200 characters. Written as a direct answer to "why should I buy this plant?" — conversational, buyer-intent, no keyword stuffing.
 
-TAB1 — Description (4 paragraphs). Each paragraph answers a specific set of buyer questions. ONLY include what is TRUE for this plant — skip anything that does not apply.
+META: 150-160 characters exactly (count carefully — must be between 150 and 160).
+  - Written for SELLING, not for plant care advice. Think: why would someone buy this as a gift or for their home?
+  - Include the plant's main keyword (its name) + at least 1 secondary keyword (e.g. succulent, houseplant, indoor plant, air-purifying plant, easy care plant).
+  - Front-load the most compelling value so AI assistants can extract it as a featured snippet.
+  - Conversational tone, no keyword stuffing, no em dashes.
+  Example structure: "Buy [Plant Name] — [key benefit]. [Secondary appeal]. [Call to feel/action]."
 
-  Para 1 — Identity & Visual Style:
-    Answer: What is its common name, scientific name, plant family, and origin region?
-    Answer: What is its visual style — architectural/modern lines, soft bohemian trailing vines, bold colorful foliage, minimalist sculptural form?
-    Answer: Is it a rare collector's plant or a beloved classic?
+TAB1 — Description: 4 paragraphs in the existing HTML format (icon token + &nbsp;<span>text</span>).
+Keep the same 4-paragraph structure. Within each paragraph, naturally weave in the relevant functional feature answers for this specific plant. ONLY include features that are TRUE — skip anything that does not apply.
 
-  Para 2 — Placement & Environment:
-    Answer the relevant questions below (skip any where the answer is no):
-    - Does it need direct sun or does it thrive in low-light or shade?
-    - Can it grow under office LEDs or fluorescent lights?
-    - Is it sensitive to AC or heater airflow?
-    - Does it need high humidity, or can it tolerate the dry air of a heated living room?
-    - Is it a trailing plant that needs a high shelf or hanging hook?
-    - Does it need a large, heavy floor pot due to deep roots?
-    - Can it go outdoors on a balcony, or is it strictly an indoor plant?
-    - Is it suitable for a bathroom, kitchen, bedroom, or office?
+  Para 1 [[CACTUS]] — Identity & Visual Style:
+    Cover: common name, scientific name, plant family, origin region.
+    Naturally include if true: visual style (architectural, trailing, colorful, minimalist), rare collector's find or beloved classic.
 
-  Para 3 — Benefits & Safety:
-    Answer the relevant questions below (skip any where the answer is no):
-    - Can it purify the air or filter indoor toxins like formaldehyde?
-    - Does it release oxygen at night, making it ideal for a bedroom?
-    - Does it naturally humidify a dry room?
-    - Does it have a practical use beyond looks — healing (like Aloe), cooking (like herbs)?
-    - Does it produce pollen or strong fragrance that may trigger allergies?
-    Then include pet safety and child safety using the soft language rules above.
+  Para 2 [[HOUSE]] — Placement & Environment:
+    Cover: where it thrives best (room type, light level). Then naturally include whichever of these are TRUE:
+    - Grows under office LEDs or low light (great for offices/apartments)
+    - Tolerates dry heated-room air, or needs humidity (bathroom, kitchen)
+    - Trailing plant suited for a hanging basket or high shelf
+    - Suitable for balcony or outdoor placement
+    - Sensitive to cold drafts or AC vents
+    Skip anything that does not apply.
 
-  Para 4 — Lifestyle & Shipping:
-    Answer the relevant questions below (skip any where the answer is no):
-    - Is it beginner-friendly or hard to kill?
-    - Can it survive a 10-day trip without water (good for travelers)?
-    - Is it a fast grower or a slow-grower that keeps its shape?
-    - Is it easy to propagate?
-    - Is it naturally pest-resistant, or does it require extra attention?
+  Para 3 [[GROWING]] — Benefits & Safety:
+    Naturally include whichever of these are TRUE for this plant:
+    - Air purifying (filters formaldehyde or indoor pollutants)
+    - Releases oxygen at night (ideal for bedroom)
+    - Naturally humidifies dry air
+    - Practical utility: healing gel (Aloe), culinary use (herbs), etc.
+    - Low or no pollen, great for allergy-sensitive homes (only if true)
+    Always include pet safety and child safety using the soft language rules:
+      Pet-safe: "This plant is pet friendly."
+      Not pet-safe: e.g. "Cats and dogs should not be left to nibble this plant — keep it out of their reach."
+      Child safety if relevant: "Best placed out of reach of young children."
+
+  Para 4 [[SPACKLE]] — Lifestyle & Shipping:
+    Naturally include whichever of these are TRUE:
+    - Beginner-friendly, hard to kill, forgiving of neglect
+    - Survives 10+ days without watering (great for frequent travelers)
+    - Fast grower or slow compact grower that keeps its shape
+    - Propagates easily (great for sharing or expanding your collection)
+    - Naturally pest-resistant, low-maintenance
     Always end with: ships bare-root without soil, carefully packaged for safe transit.
 
 TAB2 — Care Guide (6 items, ONE sentence each):
@@ -268,14 +275,12 @@ def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}{kw_block}
 
 Write all five sections for this plant following the OUTPUT format exactly.
-TAB1 — 4 paragraphs, each answers specific buyer questions about this plant:
-  Para 1 [[CACTUS]]: identity + visual style (name, family, origin, aesthetic).
-  Para 2 [[HOUSE]]: placement & environment — light needs, humidity tolerance, indoor/outdoor, best room, space requirements. Skip any that don't apply.
-  Para 3 [[GROWING]]: benefits & safety — air purification if true, bedroom/humidifier use if true, utility use if true, pet safety (soft language, no toxic/poisonous), child safety if relevant.
-  Para 4 [[SPACKLE]]: lifestyle — beginner-friendly, travel tolerance, growth speed, propagation, pest resistance (only what's true), then bare-root shipping note.
-TAB2 — 6 items [[SUN]][[WATER]][[SOIL]][[TEMPERATURE]][[FERTILIZER]][[SPACKLE]], one sentence each. Last item: indoor note FIRST, then USDA zones + US states.
-TAB3 — 6 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific questions and answers.
-- No em dashes. No bold in TAB1/TAB2. Skip anything not true for this plant.
+- TITLE: 70-80 chars, plant name first, 1-2 functional features.
+- META: 150-160 chars exactly. Sales-focused (why buy it, not how to care for it). Main keyword + 1 secondary keyword. Snippet-friendly.
+- TAB1: 4 paragraphs, same HTML format (icon token + &nbsp;<span>text</span><br><br>). Weave in relevant functional features naturally — only those TRUE for this plant. Para 4 always ends with bare-root shipping note.
+- TAB2: 6 items [[SUN]][[WATER]][[SOIL]][[TEMPERATURE]][[FERTILIZER]][[SPACKLE]], one sentence each. Last item: indoor note FIRST, then USDA zones + US states.
+- TAB3: 6 Q&As in one <p> tag, bold <strong>Q:</strong> lines, plant-specific.
+- No em dashes, no bold in TAB1/TAB2, soft pet/child safety language (no toxic/poisonous), skip anything not true.
 - If SEO keyword data is provided, weave top keywords naturally into Title, Meta, and content."""
 
 
