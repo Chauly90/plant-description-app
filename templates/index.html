@@ -238,8 +238,9 @@
       width: 16px;
       height: 16px;
     }
-    .preview-panel p { margin: 0 0 14px 0; line-height: 1.7; }
+    .preview-panel p { margin: 0 0 10px 0; line-height: 1.75; }
     .preview-panel p:last-child { margin-bottom: 0; }
+    .preview-panel span { line-height: 1.75; }
 
     /* ── Code panel ── */
     .code-panel {
@@ -1314,7 +1315,7 @@
         const resp2 = await fetch("/parse", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: streamText }),
+          body: JSON.stringify({ text: streamText, plant_name: plantName }),
         });
         if (resp2.ok) {
           const d = await resp2.json();

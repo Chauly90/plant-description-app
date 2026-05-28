@@ -160,44 +160,44 @@ SYSTEM_PROMPT = f"""You are a professional plant product description writer for 
 WRITING RULES — follow strictly for ALL sections:
 1. CONCISE: Every sentence must add value. No filler.
 2. NO EM DASHES: Never use — or –. Use commas or rewrite.
-3. NO BOLD TEXT: Never use ** or <b> or <strong>.
+3. NO BOLD IN TABS 1 & 2: Never use ** or <b> or <strong> in Description or Care Guide.
 4. SKIP IF NOT APPLICABLE: Omit features that are not true for this plant. No "no" answers.
 5. PET SAFETY: If safe, write "This plant is pet friendly" naturally. If not safe, use soft language like "best placed away from curious cats and dogs." NEVER use: toxic, non-toxic, poisonous.
 6. CHILD SAFETY: Use gentle phrasing like "place out of reach of young children." NEVER use: toxic, poisonous, dangerous, hazardous.
-7. NO REPETITION: Do not repeat info across sections.
+7. NO REPETITION: Do not repeat info across tabs.
 
 TITLE rules:
 - 70-80 characters (count carefully, must be at least 70)
 - Plant name must appear first in the title
 - After the plant name, highlight 1-2 of this plant's most notable functional features (e.g., "easy care," "air-purifying," "pet friendly," "drought tolerant," "fast growing," "low light," "healing gel")
-- Use natural, engaging language optimized for AI Search — answers the searcher's intent directly
+- Use natural, engaging language optimized for AI Search
 - No em dashes, no bold, no keyword stuffing
 
 META DESCRIPTION rules:
 - 160-200 characters (count carefully, must be at least 160)
-- Written from the buyer's perspective: why would someone want this plant? What problem does it solve or what joy does it bring?
-- Include the plant's main keyword (name) and at least 1 secondary keyword (e.g., succulent, houseplant, indoor plant, low-maintenance, care guide)
-- Front-load the most valuable information so AI assistants can extract it as a featured snippet
+- Written from the buyer's perspective: why would someone want this plant?
+- Include the plant's main keyword (name) and at least 1 secondary keyword
 - Natural sentence flow, conversational tone, no keyword stuffing, no em dashes
 
-TAB1 — Description: exactly 3 paragraphs wrapped in <p> tags, each on ONE topic:
-- Para 1 (identity): common name, scientific name, nicknames, brief origin
-- Para 2 (appearance + benefits): leaf/stem shape, color, texture, size, growth habit, best pot style, practical uses (only if true), pet/child safety, where to place at home
-- Para 3 (shipping note): plants are shipped bare-root without soil, well-packaged to survive transit; any specific shipping note for this plant (e.g. fragile leaves, cold sensitivity)
+TAB1 — Description: exactly 4 paragraphs, each on ONE topic:
+- Para 1 (identity): engaging opening, common name, scientific name, plant family, origin region
+- Para 2 (appearance): leaf/stem shape, color, texture, unique visual features, growth habit
+- Para 3 (notable traits): special features true for THIS plant only (blooms, fragrance, air purification, drought tolerance, growth speed, etc.), pet/child safety, best placement at home
+- Para 4 (growing + shipping): why it is rewarding or easy to grow, propagation if notable, ships bare-root without soil, well-packaged for safe transit
 
-TAB2 — Care Guide: exactly 6 items, each wrapped in a <p> tag. Each item = icon + topic label + colon + 2-3 sentence description. Keep each item concise. No overlap with TAB1.
-- Item 1: Light
-- Item 2: Water
-- Item 3: Soil
-- Item 4: Temperature
-- Item 5: Fertilizer
-- Item 6: USDA Zones — exact zone range (e.g. Zones 9-11), list 5-8 specific US states where it grows outdoors year-round, note it is a houseplant everywhere else
+TAB2 — Care Guide: exactly 6 items. Each item = icon + topic label + one concise sentence. Keep every item to ONE sentence. No overlap with TAB1.
+- Item 1 Light: one sentence on light needs
+- Item 2 Water: one sentence on watering frequency and method
+- Item 3 Soil: one sentence on soil type
+- Item 4 Temperature: one sentence on ideal range and cold tolerance
+- Item 5 Fertilizer: one sentence on feeding schedule
+- Item 6 USDA Zones: exact zone range + 4-6 specific US states where it grows outdoors year-round + note it is a houseplant elsewhere (1-2 sentences)
 
 TAB3 — FAQs/Common Issues: exactly 6 Q&A pairs about THIS SPECIFIC plant.
-- Questions must be real searches buyers make about this exact plant (not generic)
-- Cover: watering mistakes, leaf color/drop causes, propagation, common pests, and 2 other topics unique to this species
-- Each answer: 2 sentences max, direct and specific (mention the plant name or its traits)
-- Each pair wrapped in a <p> tag
+- Questions must reflect real buyer searches for this exact plant species (not generic plant care questions)
+- Cover: most common care mistake, why leaves drop or change color, how to propagate, common pests or diseases, and 2 other questions unique to this species
+- Each answer: 1-2 sentences, direct and specific — must mention the plant name or its distinctive trait
+- Use <strong> tags on the Q: line only
 
 OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===, nothing before or after:
 
@@ -208,23 +208,24 @@ OUTPUT FORMAT — output ONLY the five sections below, starting with ===TITLE===
 [meta description — plain text, 160-200 characters, no HTML]
 
 ===TAB1===
-3 x <p> tags, each paragraph starts with its icon then the text:
-<p>{icon('cactus')} Para 1 text...</p>
-<p>{icon('house')} Para 2 text...</p>
-<p>{icon('spackle')} Para 3 text...</p>
+Exactly 4 blocks separated by <br><br>. Each block: icon + &nbsp;<span>text</span>
+{icon('cactus')} &nbsp;<span>Para 1 text.</span><br><br>
+{icon('house')} &nbsp;<span>Para 2 text.</span><br><br>
+{icon('growing')} &nbsp;<span>Para 3 text.</span><br><br>
+{icon('spackle')} &nbsp;<span>Para 4 text.</span>
 
 ===TAB2===
-6 x <p> tags, each item starts with its icon then "Topic: description":
-<p>{icon('sun')} Light: ...</p>
-<p>{icon('water')} Water: ...</p>
-<p>{icon('soil')} Soil: ...</p>
-<p>{icon('temperature')} Temperature: ...</p>
-<p>{icon('fertilizer')} Fertilizer: ...</p>
-<p>{icon('growing')} USDA Zones: ...</p>
+Exactly 6 blocks separated by <br><br>. Each block: icon + &nbsp;<span>Topic: one sentence.</span>
+{icon('sun')} &nbsp;<span>Light: one sentence.</span><br><br>
+{icon('water')} &nbsp;<span>Water: one sentence.</span><br><br>
+{icon('soil')} &nbsp;<span>Soil: one sentence.</span><br><br>
+{icon('temperature')} &nbsp;<span>Temperature: one sentence.</span><br><br>
+{icon('fertilizer')} &nbsp;<span>Fertilizer: one sentence.</span><br><br>
+{icon('spackle')} &nbsp;<span>USDA Zones: zone range + states + houseplant note.</span>
 
 ===TAB3===
-6 x <p> tags, each Q&A pair formatted exactly as:
-<p>Q: [question]<br>A: [answer]</p>"""
+All 6 Q&A pairs inside one <p> block, bold questions, separated by <br><br>:
+<p><strong>Q: question1</strong><br>A: answer1<br><br><strong>Q: question2</strong><br>A: answer2<br><br><strong>Q: question3</strong><br>A: answer3<br><br><strong>Q: question4</strong><br>A: answer4<br><br><strong>Q: question5</strong><br>A: answer5<br><br><strong>Q: question6</strong><br>A: answer6</p>"""
 
 
 def build_prompt(plant_name: str) -> str:
@@ -233,13 +234,13 @@ def build_prompt(plant_name: str) -> str:
     return f"""Plant: {plant_name}{kw_block}
 
 Write all five sections (TITLE, META, TAB1, TAB2, TAB3) for this plant.
-- Title: 70-80 characters, plant name first, then notable functional features, AI-search optimized
-- Meta: 160-200 characters, buyer intent focus (why buy this plant?), snippet-friendly, no keyword stuffing
-- TAB1 Description: 3 <p> tags, icons cactus/house/spackle. Para 3 must mention bare-root shipping.
-- TAB2 Care Guide: 6 <p> tags, icons sun/water/soil/temperature/fertilizer/growing. Format each as "Icon Topic: description". Last item (growing) = USDA zones + 5-8 specific US states + houseplant note.
-- TAB3 FAQs: exactly 6 <p> tags. Each = Q: [question]<br>A: [2-sentence answer specific to this plant]
-- No em dashes, no bold, soft pet/child safety language, skip inapplicable features
-- If SEO keyword data is provided above, weave the strongest keywords naturally into Title, Meta, and tab content. Never repeat or stuff keywords."""
+- Title: 70-80 characters, plant name first, then 1-2 functional features, AI-search optimized
+- Meta: 160-200 characters, buyer intent focus, snippet-friendly, no keyword stuffing
+- TAB1: 4 blocks (cactus/house/growing/spackle icons), format: icon &nbsp;<span>text</span><br><br>. Para 4 must mention bare-root shipping.
+- TAB2: 6 blocks (sun/water/soil/temperature/fertilizer/spackle icons), format: icon &nbsp;<span>Topic: one sentence.</span><br><br>. Last block (spackle) = USDA zones + 4-6 US states + houseplant note.
+- TAB3: exactly 6 Q&As inside one <p> block, bold <strong>Q:</strong> lines, answers 1-2 sentences specific to this plant
+- No em dashes, soft pet/child safety language, skip inapplicable features, no bold in TAB1/TAB2
+- If SEO keyword data is provided, weave strongest keywords naturally into Title, Meta, and tab content."""
 
 
 def parse_all(text: str):
@@ -276,17 +277,19 @@ def parse_tabs(text: str):
     return tab1, tab2, tab3
 
 
-def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
+def assemble_html(tab1: str, tab2: str, tab3: str, plant_name: str = "") -> str:
+    care_label = f"{plant_name} Care Guide" if plant_name else "Care Guide"
     return (
         '<ul class="tabs">\n'
         '<li><a href="#tab1" class="active">Description</a></li>\n'
-        '<li><a href="#tab2">Care Guide</a></li>\n'
+        f'<li><a href="#tab2">{care_label}</a></li>\n'
         '<li><a href="#tab3">FAQs/Common Issues</a></li>\n'
         "</ul>\n"
         "<!--Start tab content-->\n"
         '<ul class="tabs-content">\n'
         '<li id="tab1" class="active">\n'
-        f"{tab1} </li>\n"
+        f"{tab1}\n"
+        "</li>\n"
         '<li id="tab2">\n'
         f"{tab2}\n"
         "</li>\n"
@@ -301,10 +304,11 @@ def assemble_html(tab1: str, tab2: str, tab3: str) -> str:
 def parse():
     data = request.get_json() or {}
     text = data.get("text", "")
+    plant_name = data.get("plant_name", "")
     title, meta, tab1, tab2, tab3 = parse_all(text)
     if not tab1:
         return jsonify({"error": "Could not parse"}), 400
-    return jsonify({"html": assemble_html(tab1, tab2, tab3), "title": title or "", "meta": meta or ""})
+    return jsonify({"html": assemble_html(tab1, tab2, tab3, plant_name), "title": title or "", "meta": meta or ""})
 
 
 @app.route("/")
@@ -352,7 +356,7 @@ def generate():
                 yield f"data: {json.dumps({'type': 'error', 'message': 'Could not parse response. Please try again.'})}\n\n"
                 return
 
-            html = assemble_html(tab1, tab2, tab3)
+            html = assemble_html(tab1, tab2, tab3, plant_name)
             yield f"data: {json.dumps({'type': 'done', 'html': html, 'title': title or '', 'meta': meta or ''})}\n\n"
 
         except anthropic.APIError as e:
