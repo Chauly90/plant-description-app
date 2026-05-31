@@ -1,0 +1,31 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  timeout = 26
+  included_files = ["netlify/functions/_shared.py"]
+
+[[redirects]]
+  from = "/generate"
+  to = "/.netlify/functions/generate"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/generate-amazon"
+  to = "/.netlify/functions/generate-amazon"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/generate-etsy"
+  to = "/.netlify/functions/generate-etsy"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/parse"
+  to = "/.netlify/functions/parse"
+  status = 200
+  force = true

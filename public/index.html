@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Description Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f4; min-height: 100vh; color: #1a1a1a; }
+    header { background: #2d5a27; color: white; text-align: center; padding: 32px 20px 28px; }
+    header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.3px; }
+    header p  { margin-top: 6px; opacity: 0.8; font-size: 0.95rem; }
+    .page { max-width: 960px; margin: 0 auto; padding: 28px 20px 60px; }
+    .input-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); display: flex; gap: 10px; }
+    .input-card input { flex: 1; padding: 11px 16px; border: 2px solid #dde8dd; border-radius: 8px; font-size: 1rem; transition: border-color .2s; outline: none; }
+    .input-card input:focus { border-color: #3d7a35; }
+    .input-card input::placeholder { color: #aaa; }
+    .btn-primary { padding: 11px 26px; background: #3d7a35; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, opacity .2s; }
+    .btn-primary:hover:not(:disabled) { background: #2d5a27; }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+    .gen-card { background: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .gen-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #eee; }
+    .spinner { width: 20px; height: 20px; border: 3px solid #dde8dd; border-top-color: #3d7a35; border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .gen-label { font-weight: 600; color: #2d5a27; }
+    .gen-label span { font-weight: 400; color: #555; }
+    .stream-box { padding: 14px 20px; font-size: 0.88rem; color: #666; font-style: italic; background: #fafffe; }
+    .result-card { background: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .result-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #eee; gap: 12px; flex-wrap: wrap; }
+    .result-title { font-weight: 700; font-size: 1rem; color: #2d5a27; }
+    .view-toggle { display: flex; gap: 4px; }
+    .btn-toggle { padding: 5px 14px; border: 1px solid #dde8dd; background: #f9fdf9; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: all .15s; }
+    .btn-toggle.active { background: #3d7a35; color: white; border-color: #3d7a35; }
+    .btn-copy { padding: 5px 14px; border: 1px solid #3d7a35; color: #3d7a35; background: white; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: background .15s; }
+    .btn-copy:hover { background: #f0f8f0; }
+    .btn-copy.copied { background: #3d7a35; color: white; }
+    .seo-card { background: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .seo-card-header { padding: 14px 20px; border-bottom: 1px solid #eee; font-weight: 700; font-size: 1rem; color: #2d5a27; }
+    .seo-fields { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .seo-field label { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 6px; }
+    .char-count { font-weight: 400; color: #888; }
+    .char-count.ok   { color: #3d7a35; }
+    .char-count.warn { color: #d97706; }
+    .seo-value { background: #f9fdf9; border: 1px solid #dde8dd; border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; line-height: 1.5; color: #1a1a1a; white-space: pre-wrap; word-break: break-word; cursor: text; user-select: all; }
+    .seo-field-actions { display: flex; justify-content: flex-end; margin-top: 6px; }
+    .preview-panel { padding: 24px; }
+    .preview-panel ul.tabs { list-style: none; display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; flex-wrap: wrap; }
+    .preview-panel ul.tabs li a { display: block; padding: 9px 20px; color: #666; text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 0.95rem; transition: color .15s; }
+    .preview-panel ul.tabs li a:hover { color: #3d7a35; }
+    .preview-panel ul.tabs li a.active { color: #2d5a27; border-bottom-color: #2d5a27; font-weight: 600; }
+    .preview-panel ul.tabs-content { list-style: none; }
+    .preview-panel ul.tabs-content > li { display: none; line-height: 1.75; color: #333; font-size: 0.95rem; }
+    .preview-panel ul.tabs-content > li.active { display: block; }
+    .preview-panel img.lazyload { display: inline; vertical-align: middle; margin-right: 5px; width: 16px; height: 16px; }
+    .preview-panel p { margin: 0 0 10px 0; line-height: 1.75; }
+    .preview-panel p:last-child { margin-bottom: 0; }
+    .preview-panel span { line-height: 1.75; }
+    .code-panel { padding: 0; background: #1e1e1e; }
+    .code-panel pre { padding: 20px; overflow-x: auto; font-family: "Menlo","Consolas",monospace; font-size: 0.78rem; line-height: 1.6; color: #d4d4d4; white-space: pre-wrap; word-break: break-all; }
+    .error-card { background: #fff5f5; border: 1px solid #fca5a5; border-radius: 12px; margin-top: 20px; padding: 16px 20px; color: #b91c1c; font-size: 0.95rem; }
+    .hidden { display: none !important; }
+    .channel-section { margin-top: 36px; }
+    .channel-label { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+    .channel-label-text { font-size: 1.05rem; font-weight: 800; letter-spacing: .3px; white-space: nowrap; }
+    .channel-label-line { flex: 1; height: 2px; border-radius: 2px; }
+    .channel-shopify .channel-label-text { color: #2d5a27; }
+    .channel-shopify .channel-label-line  { background: linear-gradient(90deg, #3d7a35 0%, #dde8dd 100%); }
+    .channel-amazon  .channel-label-text { color: #b45309; }
+    .channel-amazon  .channel-label-line  { background: linear-gradient(90deg, #f59e0b 0%, #fde9c4 100%); }
+    .amazon-card { background: white; border-radius: 12px; margin-top: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .amazon-header { background: #fff8f0; padding: 14px 20px; border-bottom: 1px solid #f5d0a0; font-weight: 700; font-size: 1rem; color: #b45309; }
+    .amazon-body { padding: 20px; }
+    .amazon-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .amazon-field input { width: 100%; padding: 10px 13px; border: 2px solid #f5d0a0; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color .2s; }
+    .amazon-field input:focus { border-color: #f59e0b; }
+    .btn-amazon { padding: 11px 22px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, opacity .2s; }
+    .btn-amazon:hover:not(:disabled) { background: #d97706; }
+    .btn-amazon:disabled { opacity: .55; cursor: not-allowed; }
+    .amazon-section { margin-top: 20px; border: 1px solid #f5d0a0; border-radius: 10px; overflow: hidden; }
+    .amazon-section-header { background: #fff8f0; padding: 9px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f5d0a0; }
+    .amazon-section-title { font-weight: 700; font-size: 0.85rem; color: #b45309; }
+    .amazon-section-meta { font-size: 0.75rem; color: #888; }
+    .amazon-section-meta.ok { color: #16a34a; }
+    .amazon-section-meta.warn { color: #d97706; }
+    .amazon-content { padding: 14px 16px; font-size: 0.9rem; line-height: 1.65; color: #1a1a1a; white-space: pre-wrap; word-break: break-word; min-height: 40px; }
+    .amazon-bullets-list { padding: 14px 16px; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .amazon-bullet-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; background: #fafffe; border: 1px solid #f0f0f0; border-radius: 6px; font-size: 0.88rem; line-height: 1.55; color: #1a1a1a; }
+    .bullet-num { font-weight: 700; color: #f59e0b; font-size: 0.8rem; min-width: 18px; margin-top: 2px; }
+    .bullet-text { flex: 1; }
+    .amazon-section-actions { padding: 8px 14px 12px; display: flex; justify-content: flex-end; gap: 8px; }
+    .amazon-stream-box { padding: 10px 16px; font-size: 0.82rem; color: #666; font-style: italic; background: #fafffe; }
+    .calc-card { background: white; border-radius: 12px; margin-top: 28px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .calc-header { background: #f0f8f0; padding: 14px 20px; border-bottom: 1px solid #dde8dd; font-weight: 700; font-size: 1rem; color: #2d5a27; }
+    .calc-body { padding: 20px; }
+    .calc-inputs { display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px; align-items: end; }
+    @media (max-width: 600px) { .calc-inputs { grid-template-columns: 1fr 1fr; } }
+    .calc-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .calc-field input, .calc-field select { width: 100%; padding: 10px 13px; border: 2px solid #dde8dd; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color .2s; }
+    .calc-field input:focus, .calc-field select:focus { border-color: #3d7a35; }
+    .calc-table-wrap { margin-top: 20px; overflow-x: auto; }
+    .calc-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .calc-table th { background: #f0f8f0; color: #2d5a27; font-weight: 700; padding: 9px 14px; text-align: left; border-bottom: 2px solid #dde8dd; white-space: nowrap; }
+    .calc-table td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .calc-table tr:last-child td { border-bottom: none; }
+    .calc-table tr:hover td { background: #fafffe; }
+    .sku-cell { font-family: "Menlo","Consolas",monospace; font-size: 0.82rem; color: #333; white-space: nowrap; }
+    .price-cell { font-weight: 600; color: #1a1a1a; white-space: nowrap; }
+    .btn-copy-sm { padding: 4px 10px; border: 1px solid #3d7a35; color: #3d7a35; background: white; border-radius: 5px; font-size: 0.78rem; cursor: pointer; transition: background .15s; white-space: nowrap; margin-left: 8px; vertical-align: middle; }
+    .btn-copy-sm:hover { background: #f0f8f0; }
+    .btn-copy-sm.copied { background: #3d7a35; color: white; border-color: #3d7a35; }
+    .calc-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .calc-type-tabs { display: flex; gap: 6px; margin-bottom: 18px; }
+    .calc-type-btn { padding: 7px 20px; border: 2px solid #dde8dd; background: #f9fdf9; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: #555; transition: all .15s; }
+    .calc-type-btn.active { background: #3d7a35; color: white; border-color: #3d7a35; }
+    .calc-tab-panel { display: block; }
+    .calc-tab-panel.hidden { display: none !important; }
+    .cost-cell { font-weight: 500; color: #555; white-space: nowrap; }
+    .hp-shopify-result { margin-top: 18px; background: #f0f8f0; border: 1px solid #dde8dd; border-radius: 10px; padding: 16px 20px; display: none; }
+    .hp-shopify-result.visible { display: block; }
+    .hp-shopify-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.9rem; border-bottom: 1px solid #dde8dd; }
+    .hp-shopify-row:last-child { border-bottom: none; }
+    .hp-shopify-row.total { font-weight: 800; font-size: 1.05rem; color: #2d5a27; margin-top: 4px; }
+    .hp-shopify-row .hp-result-value { font-weight: 600; font-family: "Menlo","Consolas",monospace; }
+    .hp-calc-card { background: white; border-radius: 12px; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .hp-calc-header { background: #faf5ff; padding: 14px 20px; border-bottom: 1px solid #ddd6fe; font-weight: 700; font-size: 1rem; color: #6d28d9; }
+    .hp-calc-body { padding: 20px; }
+    .hp-calc-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
+    @media (max-width: 500px) { .hp-calc-inputs { grid-template-columns: 1fr; } }
+    .hp-calc-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .hp-calc-field input, .hp-calc-field select { width: 100%; padding: 10px 13px; border: 2px solid #ddd6fe; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color .2s; }
+    .hp-calc-field input:focus, .hp-calc-field select:focus { border-color: #7c3aed; }
+    .hp-result-box { margin-top: 18px; background: #faf5ff; border: 1px solid #ddd6fe; border-radius: 10px; padding: 16px 20px; display: none; }
+    .hp-result-box.visible { display: block; }
+    .hp-result-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.9rem; color: #444; border-bottom: 1px solid #ede9fe; }
+    .hp-result-row:last-child { border-bottom: none; }
+    .hp-result-row.total { margin-top: 4px; font-weight: 800; font-size: 1.05rem; color: #6d28d9; }
+    .hp-result-label { color: #666; }
+    .hp-result-value { font-weight: 600; font-family: "Menlo","Consolas",monospace; }
+    .hp-result-row.total .hp-result-value { color: #6d28d9; font-size: 1.15rem; }
+    .size-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 6px; }
+    .size-chip-label { display: inline-flex; align-items: center; padding: 5px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; cursor: pointer; user-select: none; transition: all .15s; border: 2px solid; }
+    .size-chip-label input[type="checkbox"] { display: none; }
+    .amz-chip { border-color: #f5d0a0; color: #b45309; background: white; }
+    .amz-chip.active { background: #f59e0b; border-color: #f59e0b; color: white; }
+    .etsy-chip { border-color: #ddd6fe; color: #6d28d9; background: white; }
+    .etsy-chip.active { background: #7c3aed; border-color: #7c3aed; color: white; }
+    .listing-top-row { display: flex; gap: 12px; align-items: flex-end; }
+    .listing-top-row .amazon-field, .listing-top-row .etsy-field { flex: 1; }
+    .channel-etsy .channel-label-text { color: #6d28d9; }
+    .channel-etsy .channel-label-line  { background: linear-gradient(90deg, #7c3aed 0%, #ede9fe 100%); }
+    .etsy-card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.07); overflow: hidden; }
+    .etsy-header { background: #faf5ff; padding: 14px 20px; border-bottom: 1px solid #ddd6fe; font-weight: 700; font-size: 1rem; color: #6d28d9; }
+    .etsy-body { padding: 20px; }
+    .etsy-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 5px; }
+    .etsy-field input { width: 100%; padding: 10px 13px; border: 2px solid #ddd6fe; border-radius: 8px; font-size: 0.95rem; outline: none; transition: border-color .2s; }
+    .etsy-field input:focus { border-color: #7c3aed; }
+    .btn-etsy { padding: 11px 22px; background: #7c3aed; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .2s, opacity .2s; }
+    .btn-etsy:hover:not(:disabled) { background: #6d28d9; }
+    .btn-etsy:disabled { opacity: .55; cursor: not-allowed; }
+    .etsy-section { margin-top: 20px; border: 1px solid #ddd6fe; border-radius: 10px; overflow: hidden; }
+    .etsy-section-header { background: #faf5ff; padding: 9px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd6fe; }
+    .etsy-section-title { font-weight: 700; font-size: 0.85rem; color: #6d28d9; }
+    .etsy-section-meta { font-size: 0.75rem; color: #888; }
+    .etsy-section-meta.ok { color: #16a34a; }
+    .etsy-section-meta.warn { color: #d97706; }
+    .etsy-content { padding: 14px 16px; font-size: 0.9rem; line-height: 1.7; color: #1a1a1a; white-space: pre-wrap; word-break: break-word; min-height: 40px; }
+    .etsy-section-actions { padding: 8px 14px 12px; display: flex; justify-content: flex-end; gap: 8px; }
+    .etsy-tags-grid { padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .etsy-tag-chip { display: inline-flex; align-items: center; gap: 6px; background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 20px; padding: 4px 12px 4px 10px; font-size: 0.82rem; color: #4c1d95; font-weight: 500; }
+    .etsy-tag-num { font-size: 0.72rem; color: #7c3aed; font-weight: 700; min-width: 14px; }
+    .btn-copy-tag { background: none; border: none; cursor: pointer; padding: 0; color: #7c3aed; font-size: 0.75rem; opacity: 0.6; transition: opacity .15s; margin-left: 2px; }
+    .btn-copy-tag:hover { opacity: 1; }
+    .btn-copy-tag.copied { color: #16a34a; opacity: 1; }
+    .etsy-stream-box { padding: 10px 16px; font-size: 0.82rem; color: #666; font-style: italic; background: #faf5ff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 Plant Listing Generator</h1>
+  <p>Generate complete product listings for Shopify, Amazon &amp; Etsy — SEO titles, descriptions, pricing, and more</p>
+</header>
+
+<div class="page">
+
+  <!-- SHOPIFY -->
+  <div class="channel-section channel-shopify">
+    <div class="channel-label">
+      <span class="channel-label-text">📦 Shopify Listing</span>
+      <span class="channel-label-line"></span>
+    </div>
+    <div class="input-card">
+      <input id="plantInput" type="text" placeholder="e.g. Golden Pothos, Monstera Deliciosa, Aloe Vera, Bird of Paradise…" />
+      <button id="generateBtn" class="btn-primary" onclick="generate()">Generate</button>
+    </div>
+    <div id="genCard" class="gen-card hidden">
+      <div class="gen-header">
+        <div class="spinner"></div>
+        <div class="gen-label">Generating description for <span id="genPlantName"></span>…</div>
+      </div>
+      <div id="streamBox" class="stream-box">This may take 20–30 seconds. Please wait…</div>
+    </div>
+    <div id="errorCard" class="error-card hidden"><strong>Error:</strong> <span id="errorMsg"></span></div>
+
+    <div id="seoCard" class="seo-card hidden">
+      <div class="seo-card-header">🔍 SEO Title &amp; Meta Description</div>
+      <div class="seo-fields">
+        <div class="seo-field">
+          <label>Title <span class="char-count" id="titleCount">0 chars</span></label>
+          <div class="seo-value" id="titleValue"></div>
+          <div class="seo-field-actions"><button class="btn-copy" id="copyTitleBtn" onclick="copyField('titleValue','copyTitleBtn')">Copy Title</button></div>
+        </div>
+        <div class="seo-field">
+          <label>Meta Description <span class="char-count" id="metaCount">0 chars</span></label>
+          <div class="seo-value" id="metaValue"></div>
+          <div class="seo-field-actions"><button class="btn-copy" id="copyMetaBtn" onclick="copyField('metaValue','copyMetaBtn')">Copy Meta</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultCard" class="result-card hidden">
+      <div class="result-header">
+        <div class="result-title" id="resultTitle"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="view-toggle">
+            <button class="btn-toggle active" onclick="switchView('preview', this)">Preview</button>
+            <button class="btn-toggle" onclick="switchView('code', this)">HTML Code</button>
+          </div>
+          <button class="btn-copy" id="copyBtn" onclick="copyHTML()">Copy HTML</button>
+        </div>
+      </div>
+      <div id="previewPanel" class="preview-panel"><div id="previewContent"></div></div>
+      <div id="codePanel" class="code-panel hidden"><pre id="codeContent"></pre></div>
+    </div>
+
+    <!-- Pricing Calculator -->
+    <div class="calc-card">
+      <div class="calc-header">💰 Variant SKU &amp; Price Calculator</div>
+      <div class="calc-body">
+        <div class="calc-type-tabs">
+          <button class="calc-type-btn active" onclick="switchCalcTab('succulent', this)">🌵 Succulent</button>
+          <button class="calc-type-btn" onclick="switchCalcTab('houseplant', this)">🌿 Houseplant</button>
+        </div>
+        <div id="calcSucculent" class="calc-tab-panel">
+          <div class="calc-inputs">
+            <div class="calc-field"><label>Product Size</label><select id="calcSize" onchange="calcUpdate()"><option value="2">2 inch</option><option value="4">4 inch</option></select></div>
+            <div class="calc-field"><label>Product SKU</label><input id="calcSKU" type="text" placeholder="e.g. S2JN1158" oninput="calcUpdate()" /></div>
+            <div class="calc-field"><label>Cost Per Item ($)</label><input id="calcCost" type="number" step="0.01" min="0" placeholder="e.g. 4.50" oninput="calcUpdate()" /></div>
+          </div>
+          <div id="calcResults" class="calc-table-wrap hidden">
+            <table class="calc-table">
+              <thead><tr><th>Variant</th><th>SKU</th><th>Cost</th><th>Price</th></tr></thead>
+              <tbody id="calcTableBody"></tbody>
+            </table>
+            <div class="calc-actions"><button class="btn-primary" style="font-size:.85rem;padding:8px 18px" onclick="copyAllVariants()">Copy All (TSV)</button></div>
+          </div>
+        </div>
+        <div id="calcHouseplant" class="calc-tab-panel hidden">
+          <div class="calc-inputs" style="grid-template-columns:1fr">
+            <div class="calc-field"><label>Cost Per Item ($)</label><input id="hpShopifyCost" type="number" step="0.01" min="0" placeholder="e.g. 12.00" oninput="hpShopifyUpdate()" /></div>
+          </div>
+          <div id="hpShopifyResult" class="hp-shopify-result">
+            <div class="hp-shopify-row"><span style="color:#666">Cost per item</span><span class="hp-result-value" id="hpShopifyRowCost">—</span></div>
+            <div class="hp-shopify-row total">
+              <span>Price <span style="font-weight:400;font-size:0.78rem;color:#666">(Cost × 2 + $2)</span></span>
+              <div style="display:flex;align-items:center;gap:10px"><span class="hp-result-value" id="hpShopifyRowPrice">—</span><button class="btn-copy-sm" id="hpShopifyCopyBtn" onclick="hpShopifyCopy()">Copy</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMAZON -->
+  <div class="channel-section channel-amazon">
+    <div class="channel-label">
+      <span class="channel-label-text">🛒 Amazon Listing</span>
+      <span class="channel-label-line"></span>
+    </div>
+    <div class="amazon-card">
+      <div class="amazon-header">Amazon Listing Optimizer</div>
+      <div class="amazon-body">
+        <div class="listing-top-row">
+          <div class="amazon-field"><label>Plant Name</label><input id="amzPlantName" type="text" placeholder="e.g. String of Pearls" /></div>
+          <div class="amazon-field" style="flex:0"><label>&nbsp;</label><button class="btn-amazon" id="amzGenBtn" onclick="generateAmazon()">Generate Amazon Listing</button></div>
+        </div>
+        <div class="amazon-field" style="margin-top:12px">
+          <label>Pot Size <span style="font-weight:400;color:#888;font-size:0.78rem">(select one or more sizes)</span></label>
+          <div class="size-chips" id="amzSizeChips">
+            <label class="size-chip-label amz-chip active"><input type="checkbox" value="2" checked onchange="toggleChip(this,'amz-chip')"> 2"</label>
+            <label class="size-chip-label amz-chip"><input type="checkbox" value="3" onchange="toggleChip(this,'amz-chip')"> 3"</label>
+            <label class="size-chip-label amz-chip active"><input type="checkbox" value="4" checked onchange="toggleChip(this,'amz-chip')"> 4"</label>
+            <label class="size-chip-label amz-chip"><input type="checkbox" value="6" onchange="toggleChip(this,'amz-chip')"> 6"</label>
+            <label class="size-chip-label amz-chip"><input type="checkbox" value="8" onchange="toggleChip(this,'amz-chip')"> 8"</label>
+            <label class="size-chip-label amz-chip"><input type="checkbox" value="10" onchange="toggleChip(this,'amz-chip')"> 10"</label>
+          </div>
+        </div>
+        <div style="margin-top:8px"><button class="btn-copy" onclick="amzSyncName()" style="font-size:.82rem">↑ Use plant name from above</button></div>
+        <div id="amzGenCard" class="gen-card hidden" style="margin-top:14px">
+          <div class="gen-header"><div class="spinner"></div><div class="gen-label">Generating Amazon listing…</div></div>
+          <div id="amzStreamBox" class="amazon-stream-box">This may take 15–20 seconds. Please wait…</div>
+        </div>
+        <div id="amzError" class="error-card hidden" style="margin-top:14px"></div>
+        <div id="amzResults" class="hidden">
+          <div class="amazon-section"><div class="amazon-section-header"><span class="amazon-section-title">Product Name</span><span class="amazon-section-meta" id="amzNameCount"></span></div><div class="amazon-content" id="amzProductName"></div><div class="amazon-section-actions"><button class="btn-copy" id="amzCopyName" onclick="amzCopy('amzProductName','amzCopyName')">Copy</button></div></div>
+          <div class="amazon-section" style="margin-top:12px"><div class="amazon-section-header"><span class="amazon-section-title">Bullet Points (5)</span><span class="amazon-section-meta" id="amzBulletsCount"></span></div><ul class="amazon-bullets-list" id="amzBulletsList"></ul><div class="amazon-section-actions"><button class="btn-copy" id="amzCopyBullets" onclick="amzCopyBullets()">Copy All Bullets</button></div></div>
+          <div class="amazon-section" style="margin-top:12px"><div class="amazon-section-header"><span class="amazon-section-title">Description</span><span class="amazon-section-meta" id="amzDescCount"></span></div><div class="amazon-content" id="amzDescription"></div><div class="amazon-section-actions"><button class="btn-copy" id="amzCopyDesc" onclick="amzCopy('amzDescription','amzCopyDesc')">Copy</button></div></div>
+          <div class="amazon-section" style="margin-top:12px"><div class="amazon-section-header"><span class="amazon-section-title">Backend Keywords (Search Terms)</span><span class="amazon-section-meta" id="amzKwCount"></span></div><div class="amazon-content" id="amzKeywords"></div><div class="amazon-section-actions"><button class="btn-copy" id="amzCopyKw" onclick="amzCopy('amzKeywords','amzCopyKw')">Copy</button></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ETSY -->
+  <div class="channel-section channel-etsy">
+    <div class="channel-label">
+      <span class="channel-label-text">🛍️ Etsy Listing</span>
+      <span class="channel-label-line"></span>
+    </div>
+    <div class="etsy-card">
+      <div class="etsy-header">Etsy Listing Optimizer</div>
+      <div class="etsy-body">
+        <div class="listing-top-row">
+          <div class="etsy-field"><label>Plant Name</label><input id="etsyPlantName" type="text" placeholder="e.g. String of Pearls" /></div>
+          <div class="etsy-field" style="flex:0"><label>&nbsp;</label><button class="btn-etsy" id="etsyGenBtn" onclick="generateEtsy()">Generate Etsy Listing</button></div>
+        </div>
+        <div class="etsy-field" style="margin-top:12px">
+          <label>Pot Size <span style="font-weight:400;color:#888;font-size:0.78rem">(select one or more sizes)</span></label>
+          <div class="size-chips" id="etsySizeChips">
+            <label class="size-chip-label etsy-chip active"><input type="checkbox" value="2" checked onchange="toggleChip(this,'etsy-chip')"> 2"</label>
+            <label class="size-chip-label etsy-chip"><input type="checkbox" value="3" onchange="toggleChip(this,'etsy-chip')"> 3"</label>
+            <label class="size-chip-label etsy-chip active"><input type="checkbox" value="4" checked onchange="toggleChip(this,'etsy-chip')"> 4"</label>
+            <label class="size-chip-label etsy-chip"><input type="checkbox" value="6" onchange="toggleChip(this,'etsy-chip')"> 6"</label>
+            <label class="size-chip-label etsy-chip"><input type="checkbox" value="8" onchange="toggleChip(this,'etsy-chip')"> 8"</label>
+            <label class="size-chip-label etsy-chip"><input type="checkbox" value="10" onchange="toggleChip(this,'etsy-chip')"> 10"</label>
+          </div>
+        </div>
+        <div style="margin-top:8px"><button class="btn-copy" onclick="etsySyncName()" style="font-size:.82rem">↑ Use plant name from above</button></div>
+        <div id="etsyGenCard" class="gen-card hidden" style="margin-top:14px">
+          <div class="gen-header"><div class="spinner"></div><div class="gen-label">Generating Etsy listing…</div></div>
+          <div id="etsyStreamBox" class="etsy-stream-box">This may take 15–20 seconds. Please wait…</div>
+        </div>
+        <div id="etsyError" class="error-card hidden" style="margin-top:14px"></div>
+        <div id="etsyResults" class="hidden">
+          <div class="etsy-section"><div class="etsy-section-header"><span class="etsy-section-title">Title</span><span class="etsy-section-meta" id="etsyTitleCount"></span></div><div class="etsy-content" id="etsyTitle"></div><div class="etsy-section-actions"><button class="btn-copy" id="etsyCopyTitle" onclick="etsyCopy('etsyTitle','etsyCopyTitle')">Copy</button></div></div>
+          <div class="etsy-section" style="margin-top:12px"><div class="etsy-section-header"><span class="etsy-section-title">Description</span><span class="etsy-section-meta" id="etsyDescCount"></span></div><div class="etsy-content" id="etsyDescription"></div><div class="etsy-section-actions"><button class="btn-copy" id="etsyCopyDesc" onclick="etsyCopy('etsyDescription','etsyCopyDesc')">Copy</button></div></div>
+          <div class="etsy-section" style="margin-top:12px"><div class="etsy-section-header"><span class="etsy-section-title">Tags (13)</span><span class="etsy-section-meta" id="etsyTagsCount"></span></div><div class="etsy-tags-grid" id="etsyTagsGrid"></div><div class="etsy-section-actions"><button class="btn-copy" id="etsyCopyTags" onclick="etsyCopyAllTags()">Copy All Tags</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Houseplant Price Calculator -->
+    <div class="hp-calc-card">
+      <div class="hp-calc-header">🏷️ Calculate Prices for Houseplants</div>
+      <div class="hp-calc-body">
+        <div class="hp-calc-inputs">
+          <div class="hp-calc-field"><label>Size</label><select id="hpSize" onchange="hpCalcUpdate()"><option value="2">2 inch</option><option value="3">3 inch</option><option value="4">4 inch</option><option value="6">6 inch</option><option value="8">8 inch</option><option value="10">10 inch</option></select></div>
+          <div class="hp-calc-field"><label>Cost Per Item ($)</label><input id="hpCost" type="number" step="0.01" min="0" placeholder="e.g. 4.50" oninput="hpCalcUpdate()" /></div>
+        </div>
+        <div id="hpResult" class="hp-result-box">
+          <div class="hp-result-row"><span class="hp-result-label">Cost per item</span><span class="hp-result-value" id="hpRowCost">—</span></div>
+          <div class="hp-result-row"><span class="hp-result-label">After markup <span style="font-weight:400;color:#aaa">(×2 + $2)</span></span><span class="hp-result-value" id="hpRowOverhead">—</span></div>
+          <div class="hp-result-row"><span class="hp-result-label">Shipping cost</span><span class="hp-result-value" id="hpRowShipping">—</span></div>
+          <div class="hp-result-row total">
+            <span>Total Price</span>
+            <div style="display:flex;align-items:center;gap:10px"><span class="hp-result-value" id="hpRowTotal">—</span><button class="btn-copy-sm" id="hpCopyTotal" onclick="hpCopyTotal()">Copy</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  let generatedHTML = "";
+
+  document.getElementById("plantInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") generate();
+  });
+
+  /* ══ SHOPIFY generate — simple fetch, no SSE ══ */
+  async function generate() {
+    const plantName = document.getElementById("plantInput").value.trim();
+    if (!plantName) return;
+
+    hide("errorCard"); hide("resultCard"); hide("seoCard");
+    show("genCard");
+    document.getElementById("genPlantName").textContent = `"${plantName}"`;
+    document.getElementById("generateBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || "Server error");
+      generatedHTML = data.html;
+      displayResult(plantName, data.html, data.title || "", data.meta || "");
+    } catch (err) {
+      document.getElementById("errorMsg").textContent = err.message;
+      show("errorCard");
+    } finally {
+      hide("genCard");
+      document.getElementById("generateBtn").disabled = false;
+    }
+  }
+
+  function setCharCount(countId, text, min, max) {
+    const el = document.getElementById(countId);
+    const n  = text.length;
+    el.textContent = `${n} chars`;
+    el.className = "char-count " + (n >= min && n <= max ? "ok" : "warn");
+  }
+
+  function displayResult(plantName, html, title, meta) {
+    document.getElementById("titleValue").textContent = title;
+    document.getElementById("metaValue").textContent  = meta;
+    setCharCount("titleCount", title, 70, 80);
+    setCharCount("metaCount",  meta,  160, 200);
+    show("seoCard");
+    document.getElementById("resultTitle").textContent = plantName;
+    let preview = html.replace(/data-src="\/\//g, 'src="https://').replace(/data-src="/g, 'src="');
+    document.getElementById("previewContent").innerHTML = preview;
+    const container = document.getElementById("previewContent");
+    container.querySelectorAll("ul.tabs li a").forEach(a => {
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        const target = a.getAttribute("href");
+        container.querySelectorAll("ul.tabs li a").forEach(x => x.classList.remove("active"));
+        container.querySelectorAll("ul.tabs-content > li").forEach(x => x.classList.remove("active"));
+        a.classList.add("active");
+        container.querySelector(target).classList.add("active");
+      });
+    });
+    document.getElementById("codeContent").textContent = html;
+    document.getElementById("previewPanel").classList.remove("hidden");
+    document.getElementById("codePanel").classList.add("hidden");
+    document.querySelectorAll(".btn-toggle").forEach((b, i) => b.classList.toggle("active", i === 0));
+    show("resultCard");
+  }
+
+  function switchView(view, btn) {
+    document.querySelectorAll(".btn-toggle").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    if (view === "preview") { show("previewPanel"); hide("codePanel"); }
+    else { hide("previewPanel"); show("codePanel"); }
+  }
+
+  async function copyHTML() {
+    try {
+      await navigator.clipboard.writeText(generatedHTML);
+      const btn = document.getElementById("copyBtn");
+      btn.textContent = "Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy HTML"; btn.classList.remove("copied"); }, 2000);
+    } catch { alert("Could not copy. Switch to HTML Code tab and copy manually."); }
+  }
+
+  async function copyField(valueId, btnId) {
+    const text = document.getElementById(valueId).textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById(btnId);
+      const orig = btn.textContent;
+      btn.textContent = "Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 2000);
+    } catch { alert("Could not copy automatically."); }
+  }
+
+  function show(id) { document.getElementById(id).classList.remove("hidden"); }
+  function hide(id) { document.getElementById(id).classList.add("hidden"); }
+
+  function toggleChip(checkbox, chipClass) {
+    checkbox.parentElement.classList.toggle("active", checkbox.checked);
+  }
+  function getSelectedSizes(chipsId) {
+    return Array.from(document.querySelectorAll(`#${chipsId} input[type="checkbox"]:checked`)).map(el => el.value);
+  }
+
+  /* ══ AMAZON — simple fetch, no SSE ══ */
+  function amzSyncName() {
+    const v = document.getElementById("plantInput").value.trim();
+    if (v) document.getElementById("amzPlantName").value = v;
+  }
+  function amzCharMeta(elId, text, min, max, unit) {
+    const n = new TextEncoder().encode(text).length;
+    const el = document.getElementById(elId);
+    el.textContent = `${n} ${unit}`;
+    el.className = "amazon-section-meta " + (n <= max && n >= min ? "ok" : "warn");
+  }
+
+  async function generateAmazon() {
+    const plantName = document.getElementById("amzPlantName").value.trim();
+    if (!plantName) { alert("Please enter a plant name."); return; }
+    const potSizes = getSelectedSizes("amzSizeChips");
+    if (!potSizes.length) { alert("Please select at least one pot size."); return; }
+    const shopifyDesc = generatedHTML ? document.getElementById("codeContent").textContent : "";
+
+    hide("amzResults"); hide("amzError");
+    show("amzGenCard");
+    document.getElementById("amzGenBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate-amazon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName, pot_sizes: potSizes, shopify_desc: shopifyDesc }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || "Server error");
+      displayAmazonResult(data);
+    } catch (err) {
+      document.getElementById("amzError").textContent = "Error: " + err.message;
+      show("amzError");
+    } finally {
+      hide("amzGenCard");
+      document.getElementById("amzGenBtn").disabled = false;
+    }
+  }
+
+  function displayAmazonResult(evt) {
+    document.getElementById("amzProductName").textContent = evt.product_name || "";
+    amzCharMeta("amzNameCount", evt.product_name || "", 80, 200, "chars");
+    const list = document.getElementById("amzBulletsList");
+    list.innerHTML = "";
+    const bullets = evt.bullets || [];
+    bullets.forEach((b, i) => {
+      const li = document.createElement("li");
+      li.className = "amazon-bullet-item";
+      li.innerHTML = `<span class="bullet-num">${i+1}.</span><span class="bullet-text">${escHtml(b)}</span><button class="btn-copy-sm" id="amzCopyB${i}" onclick="amzCopySingle(${i},'amzCopyB${i}')">Copy</button>`;
+      list.appendChild(li);
+    });
+    const totalBP = bullets.join(" ").length;
+    const bpMeta = document.getElementById("amzBulletsCount");
+    bpMeta.textContent = `${totalBP} chars total`;
+    bpMeta.className = "amazon-section-meta " + (totalBP <= 1000 ? "ok" : "warn");
+    document.getElementById("amzDescription").textContent = evt.description || "";
+    amzCharMeta("amzDescCount", evt.description || "", 100, 2000, "chars");
+    document.getElementById("amzKeywords").textContent = evt.keywords || "";
+    amzCharMeta("amzKwCount", evt.keywords || "", 10, 249, "bytes");
+    show("amzResults");
+  }
+
+  function escHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  function amzCopy(contentId, btnId) {
+    const text = document.getElementById(contentId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId); const orig = btn.textContent;
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+  function amzCopyBullets() {
+    const text = Array.from(document.querySelectorAll("#amzBulletsList .bullet-text")).map(el => el.textContent).join("\n");
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("amzCopyBullets");
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy All Bullets"; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+  function amzCopySingle(i, btnId) {
+    const text = document.querySelectorAll("#amzBulletsList .bullet-text")[i].textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  /* ══ Pricing Calculator ══ */
+  const SUCCULENT_VARIANTS = {
+    "2": [
+      { name: "Plastic Pot",      skuSuffix: "",               costAdd: 0    },
+      { name: "Clay Pot",         skuSuffix: "+EEZZ2742-1",    costAdd: 2.70 },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",      costAdd: 4.10 },
+      { name: "Bamboo Pot",       skuSuffix: "+EEZZ7620.BR-1", costAdd: 1.50 },
+    ],
+    "4": [
+      { name: "Plastic Pot",      skuSuffix: "",               costAdd: 0    },
+      { name: "Clay Pot",         skuSuffix: "+EEZZ2742-1",    costAdd: 2.70 },
+      { name: "White Modern Pot", skuSuffix: "+EEZZ7650",      costAdd: 4.10 },
+      { name: "Bamboo Pot",       skuSuffix: "+EEZZ7621.BR-1", costAdd: 1.50 },
+      { name: "Custom Pot",       skuSuffix: "+CUSTOMPOT",     costAdd: 9.00 },
+    ],
+  };
+  function fmtPrice(n) { const s = n.toFixed(2); return "$" + (s.endsWith(".00") ? s.slice(0,-3) : s); }
+  function switchCalcTab(tab, btn) {
+    document.querySelectorAll(".calc-type-btn").forEach(b => b.classList.remove("active")); btn.classList.add("active");
+    document.getElementById("calcSucculent").classList.toggle("hidden", tab !== "succulent");
+    document.getElementById("calcHouseplant").classList.toggle("hidden", tab !== "houseplant");
+  }
+  function calcUpdate() {
+    const size = document.getElementById("calcSize").value;
+    const sku  = document.getElementById("calcSKU").value.trim();
+    const cost = parseFloat(document.getElementById("calcCost").value);
+    if (!sku || isNaN(cost) || cost < 0) { hide("calcResults"); return; }
+    const tbody = document.getElementById("calcTableBody");
+    tbody.innerHTML = "";
+    SUCCULENT_VARIANTS[size].forEach((v, i) => {
+      const fullSKU = sku + v.skuSuffix, fullCost = cost + v.costAdd, fullPrice = fullCost * 2;
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${v.name}</td><td class="sku-cell"><span id="sku-${i}">${fullSKU}</span><button class="btn-copy-sm" id="cpsku-${i}" onclick="copyText('sku-${i}','cpsku-${i}')">Copy</button></td><td class="cost-cell"><span id="cost-${i}">${fmtPrice(fullCost)}</span><button class="btn-copy-sm" id="cpcost-${i}" onclick="copyText('cost-${i}','cpcost-${i}')">Copy</button></td><td class="price-cell"><span id="price-${i}">${fmtPrice(fullPrice)}</span><button class="btn-copy-sm" id="cpprice-${i}" onclick="copyText('price-${i}','cpprice-${i}')">Copy</button></td>`;
+      tbody.appendChild(tr);
+    });
+    show("calcResults");
+  }
+  function hpShopifyUpdate() {
+    const cost = parseFloat(document.getElementById("hpShopifyCost").value);
+    const box  = document.getElementById("hpShopifyResult");
+    if (isNaN(cost) || cost < 0) { box.classList.remove("visible"); return; }
+    document.getElementById("hpShopifyRowCost").textContent  = fmtPrice(cost);
+    document.getElementById("hpShopifyRowPrice").textContent = fmtPrice(cost * 2 + 2);
+    box.classList.add("visible");
+  }
+  function hpShopifyCopy() {
+    const text = document.getElementById("hpShopifyRowPrice").textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("hpShopifyCopyBtn");
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
+  function copyText(spanId, btnId) {
+    const text = document.getElementById(spanId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId); const orig = btn.textContent;
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
+  function copyAllVariants() {
+    const rows = document.querySelectorAll("#calcTableBody tr");
+    const lines = ["Variant\tSKU\tCost\tPrice"];
+    rows.forEach(tr => {
+      const cells = tr.querySelectorAll("td");
+      lines.push(`${cells[0].textContent.trim()}\t${cells[1].querySelector("span").textContent.trim()}\t${cells[2].querySelector("span").textContent.trim()}\t${cells[3].querySelector("span").textContent.trim()}`);
+    });
+    navigator.clipboard.writeText(lines.join("\n")).then(() => {
+      const btn = event.target; btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy All (TSV)"; }, 2000);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  /* ══ ETSY — simple fetch, no SSE ══ */
+  function etsySyncName() {
+    const v = document.getElementById("plantInput").value.trim();
+    if (v) document.getElementById("etsyPlantName").value = v;
+  }
+  function etsyCharMeta(elId, text, min, max, unit, cssClass) {
+    const n = text.length, el = document.getElementById(elId);
+    el.textContent = `${n} ${unit}`;
+    el.className = (cssClass || "etsy-section-meta") + " " + (n >= min && n <= max ? "ok" : "warn");
+  }
+
+  async function generateEtsy() {
+    const plantName = document.getElementById("etsyPlantName").value.trim();
+    if (!plantName) { alert("Please enter a plant name."); return; }
+    const potSizes = getSelectedSizes("etsySizeChips");
+    if (!potSizes.length) { alert("Please select at least one pot size."); return; }
+    const shopifyDesc = generatedHTML ? document.getElementById("codeContent").textContent : "";
+
+    hide("etsyResults"); hide("etsyError");
+    show("etsyGenCard");
+    document.getElementById("etsyGenBtn").disabled = true;
+
+    try {
+      const resp = await fetch("/generate-etsy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plant_name: plantName, pot_sizes: potSizes, shopify_desc: shopifyDesc }),
+      });
+      const data = await resp.json();
+      if (!resp.ok || data.error) throw new Error(data.error || "Server error");
+      displayEtsyResult(data);
+    } catch (err) {
+      document.getElementById("etsyError").textContent = "Error: " + err.message;
+      show("etsyError");
+    } finally {
+      hide("etsyGenCard");
+      document.getElementById("etsyGenBtn").disabled = false;
+    }
+  }
+
+  function displayEtsyResult(evt) {
+    const title = evt.title || "";
+    document.getElementById("etsyTitle").textContent = title;
+    etsyCharMeta("etsyTitleCount", title, 140, 155, "chars", "etsy-section-meta");
+    const desc = evt.description || "";
+    document.getElementById("etsyDescription").textContent = desc;
+    etsyCharMeta("etsyDescCount", desc, 50, 1500, "chars", "etsy-section-meta");
+    const tags = evt.tags || [];
+    const grid = document.getElementById("etsyTagsGrid");
+    grid.innerHTML = "";
+    tags.forEach((tag, i) => {
+      const chip = document.createElement("span");
+      chip.className = "etsy-tag-chip";
+      chip.innerHTML = `<span class="etsy-tag-num">${i+1}</span>${escHtml(tag)}<button class="btn-copy-tag" id="etsyTagBtn${i}" onclick="etsyCopyTag(${i},'etsyTagBtn${i}')">⎘</button>`;
+      grid.appendChild(chip);
+    });
+    const tagsMeta = document.getElementById("etsyTagsCount");
+    tagsMeta.textContent = `${tags.length} tags`;
+    tagsMeta.className = "etsy-section-meta " + (tags.length === 13 ? "ok" : "warn");
+    show("etsyResults");
+  }
+
+  function etsyCopy(contentId, btnId) {
+    const text = document.getElementById(contentId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId); const orig = btn.textContent;
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+  function etsyCopyAllTags() {
+    const chips = document.querySelectorAll("#etsyTagsGrid .etsy-tag-chip");
+    const tags = Array.from(chips).map(chip => {
+      const num = chip.querySelector(".etsy-tag-num").textContent;
+      const btn = chip.querySelector(".btn-copy-tag").textContent;
+      return chip.textContent.replace(num, "").replace(btn, "").trim();
+    });
+    navigator.clipboard.writeText(tags.join(", ")).then(() => {
+      const btn = document.getElementById("etsyCopyTags");
+      btn.textContent = "✓ Copied!"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy All Tags"; btn.classList.remove("copied"); }, 1800);
+    }).catch(() => alert("Could not copy."));
+  }
+
+  /* ══ Houseplant Price Calculator ══ */
+  const HP_FEES = { "2":{shipping:8.45},"3":{shipping:8.45},"4":{shipping:10.10},"6":{shipping:16.75},"8":{shipping:27.20},"10":{shipping:32.50} };
+  function hpFmt(n) { return "$" + n.toFixed(2); }
+  function hpCalcUpdate() {
+    const size = document.getElementById("hpSize").value;
+    const cost = parseFloat(document.getElementById("hpCost").value);
+    const box  = document.getElementById("hpResult");
+    if (isNaN(cost) || cost < 0) { box.classList.remove("visible"); return; }
+    const { shipping } = HP_FEES[size];
+    const markup = cost * 2 + 2;
+    document.getElementById("hpRowCost").textContent     = hpFmt(cost);
+    document.getElementById("hpRowOverhead").textContent  = hpFmt(markup);
+    document.getElementById("hpRowShipping").textContent  = hpFmt(shipping);
+    document.getElementById("hpRowTotal").textContent     = hpFmt(markup + shipping);
+    box.classList.add("visible");
+  }
+  function hpCopyTotal() {
+    const text = document.getElementById("hpRowTotal").textContent;
+    if (text === "—") return;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById("hpCopyTotal");
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
+  function etsyCopyTag(i, btnId) {
+    const chip = document.querySelectorAll("#etsyTagsGrid .etsy-tag-chip")[i];
+    const num  = chip.querySelector(".etsy-tag-num").textContent;
+    const btn_ = chip.querySelector(".btn-copy-tag").textContent;
+    const text = chip.textContent.replace(num, "").replace(btn_, "").trim();
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById(btnId);
+      btn.textContent = "✓"; btn.classList.add("copied");
+      setTimeout(() => { btn.textContent = "⎘"; btn.classList.remove("copied"); }, 1500);
+    }).catch(() => alert("Could not copy."));
+  }
+</script>
+</body>
+</html>
